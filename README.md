@@ -57,10 +57,13 @@ npx skills add DecisionNerd/imessage-analysis
 
 Run `/imessage-analysis` in Claude Code — it installs the binary, grants permissions, registers `imessage-mcp`, and syncs your data.
 
-Add skills for querying your messages with Claude:
+Then add the analysis skills to use with Claude:
 
 ```sh
-npx skills add DecisionNerd/imessage-analysis --skill query-messages
+npx skills add DecisionNerd/imessage-analysis --skill contact-deep-dive
+npx skills add DecisionNerd/imessage-analysis --skill recent-conversations
+npx skills add DecisionNerd/imessage-analysis --skill messaging-year-in-review
+npx skills add DecisionNerd/imessage-analysis --skill compare-contacts
 ```
 
 Or configure manually in Claude Desktop (`~/Library/Application Support/Claude/claude_desktop_config.json`):
