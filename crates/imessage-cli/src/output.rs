@@ -65,9 +65,9 @@ fn print_table(batches: &[RecordBatch], limit: usize) {
     // Right-align numeric columns
     for (i, field) in schema.fields().iter().enumerate() {
         if is_numeric(field.data_type()) {
-            table.column_mut(i).map(|c| {
-                c.set_cell_alignment(CellAlignment::Right)
-            });
+            if let Some(c) = table.column_mut(i) {
+                c.set_cell_alignment(CellAlignment::Right);
+            }
         }
     }
 

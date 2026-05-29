@@ -46,7 +46,7 @@ pub fn detect_reaction(associated_message_type: i64) -> &'static str {
 pub fn detect_message_effect(expressive_send_style_id: &str) -> String {
     expressive_send_style_id
         .split('.')
-        .last()
+        .next_back()
         .unwrap_or("no-effect")
         .replace("CK", "")
         .replace("Effect", "")
@@ -58,7 +58,7 @@ pub fn extract_link_domain(text: &str) -> Option<String> {
     let url_str = text[start..]
         .split(|c: char| c.is_whitespace() || c == ')' || c == '>' || c == ',' || c == ';')
         .next()?
-        .trim_end_matches(|c: char| c == '.' || c == '!' || c == '?');
+        .trim_end_matches(['.', '!', '?']);
     let parsed = url::Url::parse(url_str).ok()?;
     let host = parsed.host_str()?;
     let domain = host.strip_prefix("www.").unwrap_or(host);

@@ -30,6 +30,7 @@ pub fn top_contacts(
     run_query!(config, built_in::top_contacts(limit, year, direct_only, direction), limit, fmt)
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn time_series(
     config: &EtlConfig,
     contact: Option<&str>,

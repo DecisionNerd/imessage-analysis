@@ -144,9 +144,7 @@ pub fn fetch() -> Result<HashMap<String, String>> {
 fn normalize_phone(raw: &str) -> String {
     let mut result = String::with_capacity(raw.len());
     for (i, c) in raw.chars().enumerate() {
-        if c == '+' && i == 0 {
-            result.push(c);
-        } else if c.is_ascii_digit() {
+        if c.is_ascii_digit() || (i == 0 && c == '+') {
             result.push(c);
         }
     }

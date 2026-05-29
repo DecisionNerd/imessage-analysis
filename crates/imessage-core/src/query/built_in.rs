@@ -1,5 +1,4 @@
 /// Named analysis queries. Each returns a SQL string ready for execution.
-
 pub fn top_contacts(
     limit: usize,
     year: Option<i32>,

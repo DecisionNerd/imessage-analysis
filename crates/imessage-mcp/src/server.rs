@@ -39,13 +39,10 @@ impl ServerState {
 }
 
 pub async fn handle(state: &ServerState, msg: Value) -> Option<Value> {
+    // Notifications (no id) get no response
+    msg.get("id")?;
     let id = msg.get("id").cloned().unwrap_or(Value::Null);
     let method = msg.get("method")?.as_str()?;
-
-    // Notifications (no id) get no response
-    if msg.get("id").is_none() {
-        return None;
-    }
 
     let params = msg.get("params").cloned().unwrap_or(json!({}));
 
