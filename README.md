@@ -1,97 +1,135 @@
 # iMessage Analysis
 
-[![skills.sh](https://skills.sh/b/DecisionNerd/imessage-analysis)](https://skills.sh/DecisionNerd/imessage-analysis)
+[![CI](https://github.com/DecisionNerd/imessage-analysis/actions/workflows/ci.yml/badge.svg)](https://github.com/DecisionNerd/imessage-analysis/actions/workflows/ci.yml)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![skills.sh](https://skills.sh/b/DecisionNerd/imessage-analysis)](https://skills.sh/DecisionNerd/imessage-analysis)
+[![PyPI](https://img.shields.io/pypi/v/imessage-analysis)](https://pypi.org/project/imessage-analysis/)
+[![Homebrew](https://img.shields.io/badge/homebrew-DecisionNerd%2Ftap-orange)](https://github.com/DecisionNerd/homebrew-tap)
+[![macOS](https://img.shields.io/badge/platform-macOS-lightgrey)](https://www.apple.com/macos/)
 
-Extract, query, and analyse your Mac iMessage history from the command line or from Python. Built in Rust with Apache DataFusion — fast enough to handle years of chat history in seconds.
+Query and analyse your entire Mac iMessage history — from the terminal, an AI agent, or a Python notebook. Extracts Apple's SQLite database into Parquet, then runs fast columnar queries via Apache DataFusion. Built in Rust.
 
-## Installation
+---
 
-### Claude Code / AI agents (one command)
+## Features
+
+- **CLI** — ETL, ad-hoc SQL, and built-in analyses (top contacts, reactions, time series, seasonality)
+- **MCP server** — expose your message data as tools for Claude and other AI agents
+- **Python package** — returns `pyarrow.Table` for seamless pandas / notebook integration
+- **Incremental refresh** — only processes new messages since the last run
+- **Contact resolution** — auto-resolves names from macOS Contacts.app, with TOML overrides
+- **Fast** — handles 500K+ messages in seconds via vectorised columnar execution
+
+---
+
+## Quickstart
+
+> macOS required. Grant Terminal **Full Disk Access** first:
+> System Settings → Privacy & Security → Full Disk Access
+
+### CLI
+
+```sh
+# Install
+brew tap DecisionNerd/tap
+brew install imessage-analysis
+
+# Build your dataset
+imessage-analysis etl
+
+# Analyse
+imessage-analysis top-contacts --limit 10
+imessage-analysis time-series --window 28
+imessage-analysis reactions
+imessage-analysis query "SELECT year, COUNT(*) AS n FROM messages GROUP BY year ORDER BY year"
+```
+
+### MCP (AI agents)
+
+One-command setup via Claude Code:
 
 ```sh
 npx skills add DecisionNerd/imessage-analysis
 ```
 
-This installs the `imessage-analysis` skill into Claude Code. Running `/imessage-analysis` will walk you through installing the binary, granting permissions, registering the MCP server, and building the initial dataset.
+Then run `/imessage-analysis` inside Claude Code. The skill installs the binary, grants permissions, registers the server, and runs the initial ETL.
 
-### Homebrew (recommended)
+To configure manually in Claude Desktop, add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
-```sh
-brew tap DecisionNerd/tap
-brew install imessage-analysis
+```json
+{
+  "mcpServers": {
+    "imessage": { "command": "imessage-mcp" }
+  }
+}
 ```
 
-This installs two binaries:
-- `imessage-analysis` — the CLI
-- `imessage-mcp` — the MCP server for AI agents
-
-### From source
-
-```sh
-git clone https://github.com/DecisionNerd/imessage-analysis
-cd imessage-analysis
-cargo build --release --locked
-# binaries at target/release/imessage-analysis and target/release/imessage-mcp
-```
-
-### Python package (PyPI)
+### Python
 
 ```sh
 pip install imessage-analysis
 ```
 
-## Quick start
+```python
+import imessage_analysis
 
-Grant Terminal **Full Disk Access** first (System Settings → Privacy & Security → Full Disk Access), then:
-
-```sh
-# Extract your messages to ~/.imessage-analysis/messages.parquet
-imessage-analysis etl
-
-# Analyse
-imessage-analysis top-contacts
-imessage-analysis time-series --window 28
-imessage-analysis reactions
-imessage-analysis query "SELECT year, COUNT(*) FROM messages GROUP BY year ORDER BY year"
+imessage_analysis.run_etl()                       # one-time setup
+df = imessage_analysis.top_contacts().to_pandas()
+df = imessage_analysis.query("SELECT * FROM messages WHERE year = 2024").to_pandas()
 ```
 
-## Requirements
+---
 
-- macOS (the iMessage database is Mac-only)
-- For source builds: Rust 1.70+
-- For the Python package: Python 3.11+
+## Installation
+
+| Method | Command |
+|---|---|
+| Homebrew | `brew tap DecisionNerd/tap && brew install imessage-analysis` |
+| Cargo | `cargo install --git https://github.com/DecisionNerd/imessage-analysis` |
+| PyPI | `pip install imessage-analysis` |
+| Claude Code | `npx skills add DecisionNerd/imessage-analysis` |
+
+Requires macOS. Rust 1.70+ for source builds. Python 3.11+ for the Python package.
+
+---
 
 ## Documentation
 
-Full documentation is in the [`docs/`](docs/) directory:
+| | |
+|---|---|
+| [Installation](docs/installation.md) | Full Disk Access, Homebrew, source, Python |
+| [CLI reference](docs/cli.md) | All commands and flags |
+| [MCP server](docs/mcp.md) | Tool list, Claude Desktop setup |
+| [Python package](docs/python.md) | API reference, notebook examples |
+| [Data model](docs/data-model.md) | All 22 output columns |
+| [Contact resolution](docs/contacts.md) | Contacts.app + TOML overrides |
+| [Architecture](docs/architecture.md) | Crate layout, ETL vs query layers |
+| [Releasing](docs/releasing.md) | Tagging, Homebrew formula update |
 
-- [Installation](docs/installation.md)
-- [CLI reference](docs/cli.md)
-- [MCP server](docs/mcp.md)
-- [Python package](docs/python.md)
-- [Data model](docs/data-model.md)
-- [Architecture](docs/architecture.md)
+---
+
+## Contributing
+
+1. Fork the repo and create a branch
+2. Run `cargo test --all` — all tests must pass
+3. Run `cargo clippy -- -D warnings` and `cargo fmt`
+4. Open a pull request — CI runs automatically
+
+This project uses [Conventional Commits](https://www.conventionalcommits.org/).
+
+---
 
 ## Attribution
 
-This project was inspired by and builds upon the foundational work of
-[Yorgos Askalidis](https://medium.com/@yaskalidis), who first documented how to access and
-analyse the macOS iMessage database:
+Inspired by the foundational work of [Yorgos Askalidis](https://medium.com/@yaskalidis), who first documented how to access and analyse the macOS iMessage database. See his [original Python implementation](https://github.com/yoasaaa/imessage-analysis) and write-ups:
 
-- [Here's How You Can Access Your Entire iMessage History on Your Mac](https://medium.com/@yaskalidis/heres-how-you-can-access-your-entire-imessage-history-on-your-mac-f8878276c6e9)
-- [Fun Things You Can Learn About Yourself From Your Messages](https://medium.com/@yaskalidis/fun-things-you-can-learn-about-yourself-and-from-your-messages-5101631a8e20)
+- [Accessing your iMessage history on Mac](https://medium.com/@yaskalidis/heres-how-you-can-access-your-entire-imessage-history-on-your-mac-f8878276c6e9)
+- [Fun analysis ideas](https://medium.com/@yaskalidis/fun-things-you-can-learn-about-yourself-and-from-your-messages-5101631a8e20)
 
-The original Python implementation is at [github.com/yoasaaa/imessage-analysis](https://github.com/yoasaaa/imessage-analysis).
-This Rust rewrite is a separate, ground-up implementation that extends the original concept
-with a native CLI, MCP server, and Python bindings.
+This is a separate, ground-up Rust rewrite that extends the concept with a native CLI, MCP server, and Python bindings.
+
+---
 
 ## License
 
-Copyright (C) 2024 David Spencer
-
-This program is free software: you can redistribute it and/or modify it under the terms of
-the [GNU General Public License v3.0](LICENSE) as published by the Free Software Foundation.
-
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
-without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Copyright (C) 2024 David Spencer. Released under the [GNU General Public License v3.0](LICENSE).
