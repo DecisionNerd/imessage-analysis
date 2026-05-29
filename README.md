@@ -1,8 +1,18 @@
 # iMessage Analysis
 
+[![skills.sh](https://skills.sh/b/DecisionNerd/imessage-analysis)](https://skills.sh/DecisionNerd/imessage-analysis)
+
 Extract, query, and analyse your Mac iMessage history from the command line or from Python notebooks. Built in Rust with Apache DataFusion — fast enough to handle years of chat history in seconds.
 
 ## Installation
+
+### Claude Code / AI agents (one command)
+
+```sh
+npx skills add DecisionNerd/imessage-analysis
+```
+
+This installs the `imessage-analysis` skill into Claude Code. Running `/imessage-analysis` will walk you through installing the binary, granting permissions, registering the MCP server, and building the initial dataset.
 
 ### Homebrew (recommended)
 

@@ -2,6 +2,14 @@
 
 `imessage-mcp` is an MCP (Model Context Protocol) server that exposes your iMessage data to AI agents. It speaks JSON-RPC 2.0 over stdio, the standard transport for local MCP servers.
 
+## One-command setup (Claude Code)
+
+```sh
+npx skills add DecisionNerd/imessage-analysis
+```
+
+Then run `/imessage-analysis` inside Claude Code. The skill installs the binary, guides you through granting Full Disk Access, registers the MCP server, and runs the initial ETL — all in one session.
+
 ## Setup with Claude Desktop
 
 1. Run the ETL at least once so a dataset exists:
