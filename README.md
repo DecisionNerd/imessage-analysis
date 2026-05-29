@@ -61,6 +61,7 @@ Then add the analysis skills to use with Claude:
 
 ```sh
 npx skills add DecisionNerd/imessage-analysis --skill period-in-review
+npx skills add DecisionNerd/imessage-analysis --skill needs-reply
 npx skills add DecisionNerd/imessage-analysis --skill contact-deep-dive
 npx skills add DecisionNerd/imessage-analysis --skill compare-contacts
 ```
