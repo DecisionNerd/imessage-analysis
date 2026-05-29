@@ -1,3 +1,4 @@
+pub mod analysis;
 pub mod etl;
 pub mod query;
 pub mod refresh;

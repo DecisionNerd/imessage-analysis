@@ -1,7 +1,13 @@
-use imessage_core::{error::Result, models::EtlConfig};
+use imessage_core::{error::Result, models::EtlConfig, query::QueryEngine};
 
-pub fn run(_config: &EtlConfig, _sql: &str, _limit: usize) -> Result<()> {
-    // Phase 2 — DataFusion query layer not yet implemented.
-    eprintln!("Query support coming in Phase 2 (DataFusion integration).");
-    Ok(())
+use crate::output::{print_batches, Format};
+
+pub fn run(config: &EtlConfig, sql: &str, limit: usize, fmt: &Format) -> Result<()> {
+    let rt = tokio::runtime::Runtime::new().unwrap();
+    rt.block_on(async {
+        let engine = QueryEngine::open(&config.data_dir).await?;
+        let batches = engine.execute(sql).await?;
+        print_batches(&batches, fmt, limit);
+        Ok(())
+    })
 }

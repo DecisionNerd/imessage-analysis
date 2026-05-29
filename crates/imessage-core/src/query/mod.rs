@@ -1,2 +1,4 @@
-// DataFusion query layer — Phase 2.
-// Placeholder so the module compiles.
+pub mod built_in;
+pub mod engine;
+
+pub use engine::QueryEngine;

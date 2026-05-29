@@ -12,7 +12,10 @@ rusqlite = { version = "0.32", features = ["bundled"] }
 arrow = { version = "54", features = ["chrono-tz"] }
 parquet = { version = "54", features = ["arrow", "snap"] }
 
-# Async (for DataFusion in the query layer)
+# Query layer
+datafusion = "46"
+
+# Async (DataFusion requires it)
 tokio.workspace = true
 
 # Serialisation
