@@ -60,9 +60,8 @@ Run `/imessage-analysis` in Claude Code — it installs the binary, grants permi
 Then add the analysis skills to use with Claude:
 
 ```sh
+npx skills add DecisionNerd/imessage-analysis --skill period-in-review
 npx skills add DecisionNerd/imessage-analysis --skill contact-deep-dive
-npx skills add DecisionNerd/imessage-analysis --skill recent-conversations
-npx skills add DecisionNerd/imessage-analysis --skill messaging-year-in-review
 npx skills add DecisionNerd/imessage-analysis --skill compare-contacts
 ```
 
