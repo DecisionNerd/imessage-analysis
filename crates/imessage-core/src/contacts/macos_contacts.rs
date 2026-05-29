@@ -6,29 +6,68 @@ use crate::error::Result;
 pub fn fetch() -> Result<HashMap<String, String>> {
     use std::cell::RefCell;
     use std::ptr::NonNull;
+    use std::sync::{Arc, Condvar, Mutex};
 
     use objc2::rc::Retained;
     use objc2::runtime::{AnyObject, Bool, ProtocolObject};
     use objc2::ClassType;
     use objc2_contacts::{
-        CNContact, CNContactEmailAddressesKey, CNContactFamilyNameKey,
-        CNContactFetchRequest, CNContactGivenNameKey, CNContactPhoneNumbersKey,
-        CNContactStore, CNKeyDescriptor,
+        CNAuthorizationStatus, CNContact, CNContactEmailAddressesKey,
+        CNContactFamilyNameKey, CNContactFetchRequest, CNContactGivenNameKey,
+        CNContactPhoneNumbersKey, CNContactStore, CNEntityType, CNKeyDescriptor,
     };
-    use objc2_foundation::{NSArray, NSString};
+    use objc2_foundation::{NSArray, NSError, NSString};
 
     unsafe {
         let store = CNContactStore::new();
 
-        // Wrap each static key in a Retained by casting through *mut AnyObject.
-        // The keys are static, so retain is safe and won't be deallocated.
+        // Check current authorisation status
+        let status = CNContactStore::authorizationStatusForEntityType(CNEntityType::Contacts);
+
+        match status {
+            CNAuthorizationStatus::Denied | CNAuthorizationStatus::Restricted => {
+                tracing::warn!(
+                    "Contacts.app access denied — grant access in \
+                     System Settings → Privacy & Security → Contacts, then re-run sync"
+                );
+                return Ok(HashMap::new());
+            }
+            CNAuthorizationStatus::NotDetermined => {
+                // Request access and block until the user responds
+                let granted = Arc::new((Mutex::new(false), Condvar::new()));
+                let granted_clone = Arc::clone(&granted);
+
+                let block = block2::RcBlock::new(move |access_granted: Bool, _error: *mut NSError| {
+                    let (lock, cvar) = &*granted_clone;
+                    *lock.lock().unwrap() = access_granted.as_bool();
+                    cvar.notify_one();
+                });
+
+                store.requestAccessForEntityType_completionHandler(
+                    CNEntityType::Contacts,
+                    &block,
+                );
+
+                // Wait for the completion handler
+                let (lock, cvar) = &*granted;
+                let result = lock.lock().unwrap();
+                let result = cvar.wait(result).unwrap();
+                if !*result {
+                    tracing::warn!(
+                        "Contacts.app access not granted — \
+                         grant access in System Settings → Privacy & Security → Contacts"
+                    );
+                    return Ok(HashMap::new());
+                }
+            }
+            _ => {} // Authorized — proceed
+        }
+
         fn retain_key(key: &'static NSString) -> Retained<ProtocolObject<dyn CNKeyDescriptor>> {
-            // SAFETY: NSString implements CNKeyDescriptor (verified at compile time via the
-            // `unsafe impl CNKeyDescriptor for NSString` in objc2-contacts). The memory layout
-            // of Retained<AnyObject> and Retained<ProtocolObject<dyn CNKeyDescriptor>> is
-            // identical (both are NonNull pointer wrappers) and ProtocolObject::from_retained
-            // cannot be used here because ImplementedBy<AnyObject> is not generated for this
-            // protocol type.
+            // SAFETY: NSString implements CNKeyDescriptor. Memory layout of
+            // Retained<AnyObject> and Retained<ProtocolObject<dyn CNKeyDescriptor>>
+            // is identical. ProtocolObject::from_retained cannot be used here because
+            // ImplementedBy<AnyObject> is not generated for this protocol type.
             unsafe {
                 let ptr: *mut AnyObject = key as *const NSString as *mut NSString as *mut AnyObject;
                 let retained: Retained<AnyObject> = Retained::retain(ptr).unwrap();
@@ -49,7 +88,6 @@ pub fn fetch() -> Result<HashMap<String, String>> {
             &keys_array,
         );
 
-        // Use RefCell so we can mutate inside the Fn closure
         let entries: RefCell<Vec<(String, String)>> = RefCell::new(Vec::new());
 
         let block = block2::StackBlock::new(
@@ -83,8 +121,8 @@ pub fn fetch() -> Result<HashMap<String, String>> {
 
         if !ok || error.is_some() {
             tracing::warn!(
-                "Contacts.app access denied or unavailable — \
-                 name resolution will use config file only"
+                "Contacts enumeration failed — \
+                 grant access in System Settings → Privacy & Security → Contacts"
             );
             return Ok(HashMap::new());
         }

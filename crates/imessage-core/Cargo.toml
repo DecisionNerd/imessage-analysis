@@ -51,4 +51,5 @@ objc2-contacts = { version = "0.2", features = [
     "CNPhoneNumber",
     "CNLabeledValue",
     "block2",
+    "CNError",
 ] }

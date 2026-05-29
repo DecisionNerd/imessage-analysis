@@ -11,8 +11,13 @@ pub fn list() -> Value {
     json!([
         {
             "name": "sync",
-            "description": "Sync message history — builds the dataset on first run, updates incrementally after that. Always call this before querying if you are not sure the data is fresh.",
-            "inputSchema": { "type": "object", "properties": {} }
+            "description": "Sync message history — builds the dataset on first run, updates incrementally after that. Use force=true to rebuild from scratch (e.g. after fixing Contacts permissions).",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "force": { "type": "boolean", "description": "Force a full rebuild even if a dataset already exists" }
+                }
+            }
         },
         {
             "name": "query",
@@ -127,11 +132,13 @@ pub fn list() -> Value {
 pub async fn call(state: &ServerState, name: &str, args: Value) -> Result<Value, String> {
     match name {
         "sync" => {
+            let force = args.get("force").and_then(|v| v.as_bool()).unwrap_or(false);
             let meta = EtlMetadata::load(&state.config.data_dir).map_err(|e| e.to_string())?;
-            let summary = match meta {
-                None => imessage_core::run_etl(&state.config).map_err(|e| e.to_string())?,
-                Some(m) => imessage_core::run_etl_since(&state.config, m.last_message_rowid)
-                    .map_err(|e| e.to_string())?,
+            let summary = if force || meta.is_none() {
+                imessage_core::run_etl(&state.config).map_err(|e| e.to_string())?
+            } else {
+                let since = meta.as_ref().map(|m| m.last_message_rowid).unwrap_or(0);
+                imessage_core::run_etl_since(&state.config, since).map_err(|e| e.to_string())?
             };
             state.invalidate_engine().await;
             let mut msg = if summary.rows_written == 0 {

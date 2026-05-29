@@ -11,6 +11,7 @@ pub struct EtlMetadata {
     pub schema_version: u32,
     /// Number of contacts resolved from Contacts.app + config overrides.
     /// 0 means name resolution did not work — names will show as phone numbers.
+    #[serde(default)]
     pub contacts_resolved: usize,
 }
 
