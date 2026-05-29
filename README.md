@@ -24,38 +24,46 @@ Query and analyse your entire Mac iMessage history — from the terminal, an AI 
 
 ## Quickstart
 
-> macOS required. Grant Terminal **Full Disk Access** first:
+> **macOS required.** Grant Terminal Full Disk Access first:
 > System Settings → Privacy & Security → Full Disk Access
 
 ### CLI
 
 ```sh
-# Install
 brew tap DecisionNerd/tap
 brew install imessage-analysis
+```
 
-# Build (first time) or update (subsequent runs)
+```sh
 imessage-analysis sync
+```
 
-# Analyse
+```sh
+imessage-analysis status
 imessage-analysis top-contacts --limit 10
-imessage-analysis time-series --window 28
-imessage-analysis reactions
-imessage-analysis search-contacts alice        # find the right name to use in other commands
+imessage-analysis time-series --year 2024
+imessage-analysis reactions --received
+imessage-analysis search-contacts alice
 imessage-analysis query "SELECT year, COUNT(*) AS n FROM messages GROUP BY year ORDER BY year"
 ```
 
 ### MCP (AI agents)
 
-One-command setup via Claude Code:
+Install and configure in one step:
 
 ```sh
 npx skills add DecisionNerd/imessage-analysis
 ```
 
-Then run `/imessage-analysis` inside Claude Code. The skill installs the binary, grants permissions, registers the server, and runs the initial ETL.
+Run `/imessage-analysis` in Claude Code — it installs the binary, grants permissions, registers `imessage-mcp`, and syncs your data.
 
-To configure manually in Claude Desktop, add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+Add skills for querying your messages with Claude:
+
+```sh
+npx skills add DecisionNerd/imessage-analysis --skill query-messages
+```
+
+Or configure manually in Claude Desktop (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 
 ```json
 {
@@ -74,7 +82,7 @@ pip install imessage-analysis
 ```python
 import imessage_analysis
 
-imessage_analysis.run_etl()                       # one-time setup
+imessage_analysis.sync()
 df = imessage_analysis.top_contacts().to_pandas()
 df = imessage_analysis.query("SELECT * FROM messages WHERE year = 2024").to_pandas()
 ```

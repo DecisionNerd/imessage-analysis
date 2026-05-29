@@ -1,5 +1,5 @@
 ---
-name: imessage-analysis
+name: install
 description: Install and configure the imessage-analysis MCP server so AI agents can query your Mac iMessage history.
 ---
 
