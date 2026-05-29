@@ -17,7 +17,7 @@ resolver = "2"
 version = "0.1.0"
 edition = "2021"
 authors = ["David Spencer"]
-license = "CC-BY-NC-4.0"
+license = "GPL-3.0-only"
 repository = "https://github.com/DecisionNerd/imessage-analysis"
 
 [workspace.dependencies]
