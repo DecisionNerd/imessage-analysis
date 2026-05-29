@@ -1,0 +1,19 @@
+# Rust build output
+/target/
+
+# Generated dataset (contains personal message data)
+data/
+*.parquet
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+dist/
+*.egg-info/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store

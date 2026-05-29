@@ -1,123 +1,190 @@
-# Extract your Mac iMessage database for easy data analysis
+# iMessage Analysis
 
-## Purpose
-Welcome. Over the past years I've been writing and editing the code to access, extract and transform the data in your Mac's iMessage database in order to create a dataframe that you can use to perform all sorts of fun data analysis.
+Extract, transform, and analyse your Mac iMessage database. The ETL notebook converts Apple's SQLite database into a clean pandas DataFrame; the analysis notebook provides ready-to-run visualisations and statistics.
 
-## Current Version
-3.3
+## Requirements
 
-## DataFrame Columns and Descriptions
-Starting from the end, here's the dataframe that this code produces with your messages.
-
-
-| Column Name               | Type         | Description                                            |
-|---------------------------|--------------|--------------------------------------------------------|
-| `message_id`              | integer  |   Unique ID for this message       |
-| `is_from_me`              | integer  | Take values of 0 or 1. Indicates whether the message was sent from you (1) or not (0).       |
-| `text_combined`           | string  | The most complete data I could find for the text of the message. If `text` (see below) is NULL then this takes the value of `inferred_text`, otherwise `text`. This is because `text` is the field from Apple but it can be NULL often, in which case I resort to hacky methods to infer the text. |
-| `text`                    | string  | The text of the message, native from Apple.            |
-| `inferred_text`           | string  | If the `text` value above is NULL, I try and infer the text from the field called `attributedBody` which can be found in the messages database. This process is not perfect, and currently works only for English.    |
-| `handle_id`               | integer  | A unique ID for the person that sent the message.     |
-| `contact_info`            | string  | The contact information of the person sending the message. It can be either a phone number of an email|
-| `updated_contact_info`    | Placeholder  | For 1-1 chats, this field is always the other person in the chat. For group chats, `contact_info` is the sender and this simply says `group-chat`.  |
-| `chat_id`                 | integer  | A Unique ID representing the chat that the message was sent in.      |
-| `chat_members_contact_info` | string | String representing a list of contact information, e.g. "['+123556632','example@email.com']". You can convert this string to a list of strings by running `ast.literal_eval(x)`|
-| `chat_members_handles`    | string  | Similar to the column above `chat_members_contact_info` this column stores a list with the `handle_id` of every participant in the chat in which this message was sent. You can convert this string into a list of handles by running  `ast.literal_eval(x)`|
-| `chat_size`               | integer  | Number of participants in this chat, NOT counting yourself. So a private chat between you and another person will have chat_size=1  |
-| `is_audio_message`        | integer  | 1 indicates that the message is an audio message, 0 not. |
-| `message_effect_type`          | string  | The effect that the message was sent with, or `no-effect` if there is none. Possible values: `impact`, `gentle`, `Echo`, `HappyBirthday`, `loud`, `Fireworks`, `Lasers`, `invisibleink`, `Confetti`, `Heart`, `Spotlight`, `Sparkles`, `ShootingStar` |
-| `message_reaction_type`                | string  |  The type of reaction that this message is, or `no-reaction` if it is not a reaction. Possible values: `Disliked`, `Emphasized`, `Laughed`, `Liked`, `Loved`, `Questioned`, `Removed dislike`, `Removed emphasis`, `Removed heart`, `Removed laugh`, `Removed like`, `Removed question mark`       |
-| `is_thread_reply`         | integer  | Indicates whether this message was a reply to a specific message (i.e,, a thread) or not. 1 if it is a thread reply, 0 if it is not.  |
-| `link_domain`             | string  | The domain of the link, if the message is a link. Otherwise `None` |
-| `name`                    | string  | The human-readable name of the sender of the message. This is equivalent to saving a contact for a number and displayin the name instead of the contact information.        |
-| `timestamp`               | string  | The timestamp when the message was sent. When storing the dataframe in CSV and loading again the type resets to string. Convert to timestamp with `pd.Timestamp(x)`. Example value: '2024-04-26 14:35:03'|
-| `date`                    | string  | Similar to the `timestamp` above but just the date. Convert to datetime by `df_messages['timestamp'].apply(lambda x: x.date())`. Example value:   `'2024-04-26'`         |
-| `month`                   | integer  | The month, as extracted from the `date` field. Values go from 1 (January) to 12 (December)          |
-| `year`                    | integer  | The year, as extracted from the `date` field.            |
-
-
-
+- macOS (the iMessage database is Mac-only)
+- Python 3.11+
+- Jupyter Notebooks
 
 ## Getting Started
-You need a Mac for this process.
 
-You need familiarity with Python and [jupyter notebooks](https://jupyter.org/try-jupyter/notebooks/?path=notebooks/Intro.ipynb) to use this code.
-In the future I might package the whole ETL notebook into a script you can run, but that's not a big priority right now.
+1. Fork and clone the repo
+2. Install dependencies (`pip install -e .` or install the packages listed in `pyproject.toml`)
+3. Run the two notebooks in order:
+   - `notebooks/imessages-extract-transform-load.ipynb` — run once to build and save the DataFrame
+   - `notebooks/imessages-analysis.ipynb` — explore and visualise your data
 
-1. Fork this repo
-2. Clone to your local machine
-3. Open jupyter notebook, load and run the notebooks.
+---
 
-The repo has two notebooks. One is the ETL notebook that you need to run once in order to extract, transform and save a clean, data-analysis-friendly dataframe. The other is a notebook with some analysis ideas and code. 
+## How Apple Stores iMessages
 
-## Reading
-You can read the first blog post I wrote that explains that fundamentals of the code [here](https://medium.com/@yaskalidis/heres-how-you-can-access-your-entire-imessage-history-on-your-mac-f8878276c6e9). Even though the code itself has since been updated, the base code and process is the same.
+The iMessage database lives at `~/Library/Messages/chat.db` and uses SQLite. Four tables are relevant:
 
-You can also read about some fun analysis you can do once you have the clean dataframe [here](https://medium.com/@yaskalidis/fun-things-you-can-learn-about-yourself-and-from-your-messages-5101631a8e20)
+| Table | Description |
+|---|---|
+| `message` | One row per message: text, timestamp, `is_from_me`, and metadata |
+| `handle` | Maps `handle_id` → contact info (phone number or email) |
+| `chat_message_join` | Maps `message_id` → `chat_id` |
+| `chat_handle_join` | Maps `chat_id` → the `handle_id`s of all participants |
 
+---
 
-## How Apple stores your messages database
-The main data entities we're working with here is the messages, the chats and the contact information.
+## ETL Notebook (`imessages-extract-transform-load.ipynb`)
 
-```messages```: table that has information about each unique message sent or received. The information includes the text (see below for more on this), time and whether the message was sent or received.
+Reads the raw SQLite database and produces `data/df_messages.csv`.
 
-```chat_message_joins```: table that maps each unique ```message_id``` to a unique ```chat_id```.
+### Steps
 
-```chat_handles_join```: tables that maps each unique ```chat_id``` to the list of ```handle_id```s that participate in that chat.
+**Step 1 — Connect and load**
+Opens `~/Library/Messages/chat.db` and loads the four core tables. You must update the username in the database path.
 
-```handles```:table that maps each ```handle_id``` to the contact information - phone number or email.
+**Step 2 — Rename columns**
+`ROWID` → `message_id`; `id` (on the handle table) → `contact_info`.
 
-## High level overview of the extraction and transformation process
+**Step 3 — Join tables and infer text**
+Merges messages with `chat_message_join` to add `chat_id`. For messages where Apple's `text` column is `NULL`, the text is inferred from the `attributedBody` binary column using `clean_text()` in `src/helper.py`. The best available text is stored in `text_combined`.
 
-In the ```messages``` table, each unique message has a ```ROWID``` which I rename ```message_id``` since it's a unique identifier for messages. 
-I join the ```messages``` table to a table called ```chat_message_joins``` using the ```message_id```. This join gives me the ```chat_id```, representing the unique chat that each message was sent.
-Finally, the remaining information that is missing is the participants in each chat, and hence the people that received or sent each message.
+**Step 4 — Add chat membership**
+For each message, looks up all participants in the chat via `chat_handle_join` and `handle`. Adds `chat_members_handles`, `chat_members_contact_info`, and `chat_size`.
 
-For that I use two tables: the ```handles``` table that has a unique ```handle_id``` for each unique handle that you have interacted with and that handle's contact information. 
+**Step 5 — Add message features**
 
-The ```chat_handles_join``` table bridges the handles information back to the messages because it includes which handles are participating in each ```chat_id```.
+| Feature | Column | Method |
+|---|---|---|
+| Message effect (Fireworks, Confetti, etc.) | `message_effect` | Parse `expressive_send_style_id` |
+| Thread reply | `is_thread_reply` | Non-null `thread_originator_guid` |
+| Shared link domain | `link_domain` | Parse `text_combined` when `balloon_bundle_id` is set |
+| Reaction type | `reaction` | Map `associated_message_type` code via `detect_reaction()` |
 
-So the discovery process can look something like this:
-get the ```message_id``` from the ```messages``` table, get the ```chat_id``` of that message from the ```chat_message_joins``` table, get the handle_ids of the participants in that chat from the ```chat_handles_join```, and finally translate the handle_ids to contact information (phone numbers and email you can read and recognize) using the ```handles``` table.
+**Step 6 — Map contacts to names**
+You provide a dictionary that maps phone numbers / emails to human-readable names (e.g. `{'+447700900000': 'Alice'}`). This handles the case where the same person appears under multiple handles (SMS vs iMessage, phone vs email). The result is stored in the `name` column.
 
-## Notes
+**Step 7 — Add date columns**
+Extracts `date`, `month`, and `year` from the Apple epoch timestamp (seconds since 2001-01-01).
 
-* Some messages in the ```messages``` table have a ```NULL``` text field even though the message had text when I sent or received it. This seems to be something that was duplicated, since the repo [here](https://github.com/niftycode/imessage_reader) also has a similar issue. 
-I solve for this in this new version of the code by discovering and extracting the message body field inside a column called ```attributedBody```. It's totally perfect but it works pretty great. To distinguish, I create a new column called ```inferred_text```.
+**Step 8 — Fix recipient for sent messages**
+Apple leaves the recipient `NULL` on sent messages. This step infers it: for 1-1 chats the recipient is the other participant; for group chats it is set to `'group-chat'`. Result stored in `updated_contact_info`.
 
-* The recipient field is also generrally ```NULL``` when the message is a sent one (vs received). After some brainstorming and few tries, I filled that information by looking at the participants in the chat. If it is a private chat (i.e., you and one more person) then if the message is sent, the recipient is the other person in the chat. If the chat is a _group_ chat I decided to have the recipient simply as 'group-chat', since there is no single recipient (which might be why Apple decided to ```NULL``` that field). In the future I do want to iterate on this since there is a lot of information lost by simply calling it 'group-chat': I will explore having the column be a list that sometimes has one recipient and sometimes more. 
+**Step 9 — Save**
+Exports to `data/df_messages.csv`.
 
-* If someone you know messages you sometimes from their phone number and other times from their email (e.g., Apple ID) then Apple assigns two different ```handle_id```s. That's why I added Step 5 in the ETL notebook where you can manually create a dictionary that maps various contact information to the person's name. That way, when you want to do analysis on your messages with a specific person you query for the person's name, and the code will include all messages sent and received from both the phone number and the email.
-* To make things slightly more complicated, Apple will store a differnet handle_id even if the same phone number messages you once on iMessage (blue buble) and once on SMS (green bubbles). Even when sending an iMessage, sometime the messages arrives as an SMS due to e.g, poor connection issues. So you have to be careful with that too. Again, Step 5 in the ETL notebook should take care of that, and when you query for a person's name you will get both SMS and iMessages.
+---
 
-* Note that some of the messages in the final dataframe will be things other than messages sent between people. This includes automated messages you might receive from services (like 2-fac authentication codes, restaurant reservation confirmation messages etc) as well as even more exotic thigns such as notifications that someone has started or stopped sharing their location with you or Apple Watch competitions. 
+## Output DataFrame
 
-## New in this Version
-Updates in 3.2
+22 columns:
 
-* Added new fields indicating whether the message is an audio_message, or a thread reply.
-* Added a new field with the effect that the message was sent with (e.g., fireworks, baloons etc)
-* Updated the way that I detect whether the "message" was a reaction, which now covers is more accurate and expansive. It now includes even when a reaction is removed.
+| Column | Type | Description |
+|---|---|---|
+| `message_id` | int | Unique message identifier (`ROWID` from Apple) |
+| `is_from_me` | int | `1` = sent by you, `0` = received |
+| `text_combined` | str | Best available message text: native `text` if non-null, otherwise `inferred_text` |
+| `text` | str | Raw text from Apple's database (may be `NULL`) |
+| `inferred_text` | str | Text extracted from `attributedBody` when `text` is `NULL` (English only) |
+| `handle_id` | int | ID of the sender/receiver handle |
+| `contact_info` | str | Phone number or email of the sender (null for sent messages before Step 8) |
+| `updated_contact_info` | str | Corrected recipient: other person for 1-1 chats, `'group-chat'` for group chats |
+| `chat_id` | int | ID of the conversation thread |
+| `chat_members_contact_info` | str | Serialised list of contact info for all chat participants (use `ast.literal_eval()` to parse) |
+| `chat_members_handles` | str | Serialised list of handle IDs for all chat participants |
+| `chat_size` | int | Number of participants excluding yourself (`1` = private chat) |
+| `is_audio_message` | int | `1` if this is an audio message |
+| `message_effect` | str | Effect the message was sent with, or `'no-effect'`. Possible values: `Confetti`, `Echo`, `Fireworks`, `HappyBirthday`, `Heart`, `Lasers`, `Spotlight`, `Sparkles`, `ShootingStar`, `gentle`, `impact`, `invisibleink`, `loud` |
+| `reaction` | str | Reaction type or `'no-reaction'`. Possible values: `Loved`, `Liked`, `Laughed`, `Emphasized`, `Questioned`, `Disliked`, `Removed heart`, `Removed like`, `Removed laugh`, `Removed emphasis`, `Removed question mark`, `Removed dislike` |
+| `is_thread_reply` | int | `1` if this message is a reply to a specific message in a thread |
+| `link_domain` | str | Domain of a shared link (e.g. `'spotify.com'`), or `'no-link'` |
+| `name` | str | Human-readable contact name from the mapping you provide in Step 6 |
+| `timestamp` | str | Full datetime string, e.g. `'2024-04-26 14:35:03'`. Convert with `pd.Timestamp(x)` |
+| `date` | str | Date only, e.g. `'2024-04-26'` |
+| `month` | int | Month extracted from `date` (1–12) |
+| `year` | int | Year extracted from `date` |
 
+---
 
-Updates in 3.1
-* I included a column that detects whether the "message" was a [reaction](https://support.apple.com/guide/messages/use-tapbacks-icht504f698a/mac) and, if so, what type of a reaction.
-This works for reactions sent from English language iPhones, and doesn't work for Greek (yet). This detection relies on the text of the message.
+## Analysis Notebook (`imessages-analysis.ipynb`)
 
-Updates in 3
-* Many more messages now contain text. This can enable you do to sentiment or other text analysis. My best impression is that Apple changed the way that it stores the message text in the database at some point, and moved towards runtime encoding. After lots of trial and error, I was able to extract a pretty good approximation of the English text from another column in the table. The big limitation right now is that this works only for English characters. I tried it with Greek and wasn't successful. 
-* The sent messages now have their recipient in the data. If you sent the message in a group chat, it is simply denoted as 'group-chat' (for now, see below for future work)
+Loads `data/df_messages.csv` and produces plots saved to `plots/`.
 
+### Sections
 
-## Future Work
-* When the message is sent in a group chat, right now I simply have the recipient as 'group-chat'. I want to edit that and perhaps include the list of recipients. This way if you want to calculcate the numebr of messages between you and another person in both private chats as well as group chats you will be able to do so. 
-* Right now, Step 3 of the ETL notebook is very slow because the code is not optimized. I want to make that more efficient.
+**1 — Messages over time**
+- Daily message count with a 28-day rolling average
+- Sent vs received trends on the same chart
+- Per-person message trend (customise the contact name)
+- Annual totals bar chart
+- Sent/received ratio over time
 
+**2 — Top contacts**
+- Counts messages per person (direct chats only, `chat_size == 1`)
+- Bar chart of the top 10 most-texted people
 
-<br>
-<br>
+**3 — Message features**
+- Breakdown of reaction types (Loved, Liked, Laughed, …)
+- Breakdown of message effects (Fireworks, Confetti, …)
+- Thread reply rate
+- Top shared link domains
+
+**4–5 — Per-contact statistics**
+- For each contact: total messages, first/last date, active days, average messages per day, percentage of days texted since first message
+
+**6 — Seasonality**
+- Messages by day of week (sent vs received)
+- Messages by day of month (grouped into thirds)
+- Messages by month of year
+
+---
+
+## Source Module (`src/helper.py`)
+
+Utility functions used by the ETL notebook.
+
+| Function | Description |
+|---|---|
+| `clean_text(byte_string)` | Infers message text from `attributedBody` when `text` is `NULL` |
+| `extract_ascii_text(byte_string)` | Converts bytes to ASCII, preserving whitespace |
+| `extract_substring(s, x1, x2)` | Extracts the substring between two delimiter strings |
+| `convert_handle_id_to_contact_info(handle_id, handles)` | Looks up contact info for a given handle ID |
+| `update_contact_info(contact_info, contact_info_list, message_id)` | Fills recipient for sent messages |
+| `get_handle_and_contact_list(chat_id, chat_handle_join, handles)` | Returns all handle IDs and contact info for a chat |
+| `get_chat_size(handles_list)` | Returns the number of participants in a chat |
+| `get_rolling_avg(daily_count, column_name, window_size)` | Computes a rolling average, filling missing dates with zero |
+| `detect_reaction(associated_message_type)` | Maps Apple's reaction code integer to a readable string |
+| `detect_message_effect(x)` | Parses `expressive_send_style_id` into a readable effect name |
+| `extract_domain(url)` | Extracts the domain from a URL string |
+| `apply_function(row)` | Row-level wrapper for `extract_domain`; only fires when a link preview is present |
+
+---
+
+## Known Limitations
+
+- **NULL text fields**: Some messages from Apple's database have a `NULL` `text` field. The `inferred_text` column attempts to recover the text from `attributedBody`, but this is imperfect and only works for English.
+- **Group chat recipients**: Sent messages in group chats record only `'group-chat'` as the recipient rather than the full participant list.
+- **Multiple handles per person**: The same person can have separate handle IDs for SMS vs iMessage, or for phone number vs Apple ID email. Use the name-mapping dictionary in Step 6 of the ETL notebook to consolidate them.
+- **Non-person messages**: The dataset includes automated messages (2FA codes, booking confirmations, location-sharing notifications, etc.).
+
+---
+
+## Version History
+
+**v3.3** — Performance: Step 3 (adding chat membership) reduced from ~5 minutes to near-instant.
+
+**v3.2** — Added `is_audio_message`, `is_thread_reply`, `message_effect`. Replaced text-based reaction detection with the more accurate and complete `associated_message_type` integer mapping (now covers reaction removals and works regardless of device language).
+
+**v3.1** — Added `reaction` column (English-only text-pattern detection).
+
+**v3** — Introduced `inferred_text` via `attributedBody` parsing, substantially increasing the number of messages with recoverable text. Added `updated_contact_info` to fill recipients on sent messages.
+
+---
+
+## Further Reading
+
+- [Accessing your iMessage history on Mac](https://medium.com/@yaskalidis/heres-how-you-can-access-your-entire-imessage-history-on-your-mac-f8878276c6e9) — explains the database fundamentals
+- [Analysis ideas](https://medium.com/@yaskalidis/fun-things-you-can-learn-about-yourself-and-from-your-messages-5101631a8e20) — examples of what you can do with the clean DataFrame
+
+---
 
 [![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
-## License
 
-This project is licensed under the [Creative Commons Attribution-NonCommercial 4.0 International License](https://creativecommons.org/licenses/by-nc/4.0/).
+Licensed under the [Creative Commons Attribution-NonCommercial 4.0 International License](https://creativecommons.org/licenses/by-nc/4.0/).

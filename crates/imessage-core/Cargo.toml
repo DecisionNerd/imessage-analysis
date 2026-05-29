@@ -1,0 +1,36 @@
+[package]
+name = "imessage-core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[dependencies]
+# SQLite
+rusqlite = { version = "0.32", features = ["bundled"] }
+
+# Arrow / Parquet
+arrow = { version = "54", features = ["chrono-tz"] }
+parquet = { version = "54", features = ["arrow", "snap"] }
+
+# Async (for DataFusion in the query layer)
+tokio.workspace = true
+
+# Serialisation
+serde.workspace = true
+serde_json.workspace = true
+toml = "0.8"
+
+# Error handling
+thiserror.workspace = true
+
+# Logging
+tracing.workspace = true
+
+# Date/time
+chrono.workspace = true
+
+# URL parsing
+url = "2"
+
+# Home directory resolution
+dirs-next = "2"

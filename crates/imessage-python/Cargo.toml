@@ -1,0 +1,13 @@
+[package]
+name = "imessage-python"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[lib]
+name = "imessage_analysis"
+crate-type = ["cdylib"]
+
+[dependencies]
+imessage-core = { path = "../imessage-core" }
+pyo3 = { version = "0.22", features = ["extension-module"] }

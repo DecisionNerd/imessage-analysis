@@ -1,0 +1,30 @@
+[workspace]
+members = [
+    "crates/imessage-core",
+    "crates/imessage-cli",
+    "crates/imessage-mcp",
+    "crates/imessage-python",
+]
+# Exclude the Python bindings from default builds — use `maturin develop` instead.
+default-members = [
+    "crates/imessage-core",
+    "crates/imessage-cli",
+    "crates/imessage-mcp",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["David Spencer"]
+license = "CC-BY-NC-4.0"
+repository = "https://github.com/DecisionNerd/imessage-analysis"
+
+[workspace.dependencies]
+# Shared across multiple crates
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+tracing = "0.1"
+chrono = { version = "0.4", features = ["serde"] }

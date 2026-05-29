@@ -1,0 +1,13 @@
+# Contact name overrides.
+# Maps phone numbers or email addresses to human-readable names.
+# These take precedence over names auto-resolved from macOS Contacts.app.
+#
+# Copy this file to contacts.toml and pass it with:
+#   imessage-analysis etl --contacts contacts.toml
+#
+# Same contact can have multiple entries (SMS + iMessage, phone + email).
+
+[contacts]
+"+14155551234" = "Alice"
+"alice@example.com" = "Alice"
+"+14155559999" = "Bob"

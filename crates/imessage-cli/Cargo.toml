@@ -1,0 +1,24 @@
+[package]
+name = "imessage-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "imessage-analysis"
+path = "src/main.rs"
+
+[dependencies]
+imessage-core = { path = "../imessage-core" }
+
+clap = { version = "4", features = ["derive", "env"] }
+indicatif = "0.17"
+comfy-table = "7"
+colored = "2"
+
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+chrono.workspace = true
