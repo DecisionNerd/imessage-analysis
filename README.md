@@ -1,12 +1,55 @@
 # iMessage Analysis
 
-Extract, transform, and analyse your Mac iMessage database. The ETL notebook converts Apple's SQLite database into a clean pandas DataFrame; the analysis notebook provides ready-to-run visualisations and statistics.
+Extract, query, and analyse your Mac iMessage history from the command line or from Python notebooks. Built in Rust with Apache DataFusion — fast enough to handle years of chat history in seconds.
+
+## Installation
+
+### Homebrew (recommended)
+
+```sh
+brew tap DecisionNerd/tap
+brew install imessage-analysis
+```
+
+This installs two binaries:
+- `imessage-analysis` — the CLI
+- `imessage-mcp` — the MCP server for AI agents
+
+### From source
+
+```sh
+git clone https://github.com/DecisionNerd/imessage-analysis
+cd imessage-analysis
+cargo build --release --locked
+# binaries at target/release/imessage-analysis and target/release/imessage-mcp
+```
+
+### Python package (PyPI)
+
+```sh
+pip install imessage-analysis
+```
+
+## Quick start
+
+Grant Terminal **Full Disk Access** first (System Settings → Privacy & Security → Full Disk Access), then:
+
+```sh
+# Extract your messages to ~/.imessage-analysis/messages.parquet
+imessage-analysis etl
+
+# Analyse
+imessage-analysis top-contacts
+imessage-analysis time-series --window 28
+imessage-analysis reactions
+imessage-analysis query "SELECT year, COUNT(*) FROM messages GROUP BY year ORDER BY year"
+```
 
 ## Requirements
 
 - macOS (the iMessage database is Mac-only)
-- Python 3.11+
-- Jupyter Notebooks
+- For source builds: Rust 1.70+
+- For the Python package: Python 3.11+
 
 ## Getting Started
 

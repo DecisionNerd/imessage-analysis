@@ -1,0 +1,93 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and release
+    runs-on: macos-14          # arm64, matches primary install target
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build release binaries
+        run: cargo build --release --locked --bin imessage-analysis --bin imessage-mcp
+
+      - name: Create source tarball
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          git archive \
+            --format=tar.gz \
+            --prefix="imessage-analysis-${VERSION#v}/" \
+            HEAD \
+            -o "imessage-analysis-${VERSION#v}.tar.gz"
+          echo "TARBALL=imessage-analysis-${VERSION#v}.tar.gz" >> "$GITHUB_ENV"
+          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+          echo "VERSION_BARE=${VERSION#v}" >> "$GITHUB_ENV"
+
+      - name: Compute SHA256
+        run: |
+          SHA=$(shasum -a 256 "$TARBALL" | awk '{print $1}')
+          echo "SHA256=${SHA}" >> "$GITHUB_ENV"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$VERSION" \
+            --title "$VERSION" \
+            --notes "See [CHANGELOG](https://github.com/DecisionNerd/imessage-analysis/blob/master/CHANGELOG.md) for details." \
+            "$TARBALL" \
+            "target/release/imessage-analysis" \
+            "target/release/imessage-mcp"
+
+      - name: Update Homebrew formula
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          TARBALL_URL="https://github.com/DecisionNerd/imessage-analysis/archive/refs/tags/${VERSION}.tar.gz"
+
+          # Clone the tap
+          git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/DecisionNerd/homebrew-tap.git" tap-repo
+          cd tap-repo
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          BRANCH="update-imessage-analysis-${VERSION_BARE}"
+          git checkout -b "$BRANCH"
+
+          # Update url, sha256, and version in the formula
+          sed -i '' \
+            -e "s|url \".*\"|url \"${TARBALL_URL}\"|" \
+            -e "s|sha256 \".*\"|sha256 \"${SHA256}\"|" \
+            Formula/imessage-analysis.rb
+
+          git add Formula/imessage-analysis.rb
+          git commit -m "imessage-analysis ${VERSION_BARE}"
+          git push origin "$BRANCH"
+
+          # Open a PR
+          gh pr create \
+            --repo DecisionNerd/homebrew-tap \
+            --title "Update imessage-analysis to ${VERSION_BARE}" \
+            --body "Automated formula update for release ${VERSION}." \
+            --base main \
+            --head "$BRANCH"
+        env:
+          GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
