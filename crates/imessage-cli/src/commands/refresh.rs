@@ -1,5 +1,6 @@
 use imessage_core::{
     error::Result,
+    etl::incremental,
     models::EtlConfig,
     storage::metadata::EtlMetadata,
 };
@@ -24,7 +25,7 @@ pub fn run(config: &EtlConfig) -> Result<()> {
     spinner.set_message(format!("Refreshing messages after ROWID {since}…"));
     spinner.enable_steady_tick(std::time::Duration::from_millis(80));
 
-    let summary = imessage_core::run_etl_since(config, since)?;
+    let summary = incremental::refresh(config)?;
 
     spinner.finish_and_clear();
     println!("✓ Refresh complete — {} new messages", summary.rows_written);
