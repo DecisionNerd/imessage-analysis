@@ -4,32 +4,56 @@
     "compare-contacts": {
       "source": "DecisionNerd/imessage-analysis",
       "sourceType": "github",
-      "skillPath": "skills/compare-contacts/SKILL.md",
-      "computedHash": "ecc971ff705821f4326e29c27068e76ec941617a5c68462e136cd9f871d01d87"
+      "skillPath": ".agents/skills/compare-contacts/SKILL.md",
+      "computedHash": "995299a614ec5abd32bd2d290007a863a07628a23e9cdf793121fddb985826d4"
     },
     "contact-deep-dive": {
       "source": "DecisionNerd/imessage-analysis",
       "sourceType": "github",
-      "skillPath": "skills/contact-deep-dive/SKILL.md",
-      "computedHash": "49d20f0f2fe64f7a30fa405b670a62aa957a443766dca158032eeb4459764df7"
+      "skillPath": ".agents/skills/contact-deep-dive/SKILL.md",
+      "computedHash": "49914ed4ef930b1a7ce1c60443fb2d5cad5f146be662d2a11822eccc99a4631b"
+    },
+    "imessage-analysis-install": {
+      "source": "DecisionNerd/imessage-analysis",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/imessage-analysis-install/SKILL.md",
+      "computedHash": "a3647634ed49552a95dfa34f05d96af6af5ba03c59b3c882091318e3bb4c9f2a"
+    },
+    "imessage-analysis-status": {
+      "source": "DecisionNerd/imessage-analysis",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/imessage-analysis-status/SKILL.md",
+      "computedHash": "0bc1579ef5747433f7358c0cc8690f8d26d7a6cc562579b8f21673a0eea922c4"
     },
     "needs-reply": {
       "source": "DecisionNerd/imessage-analysis",
       "sourceType": "github",
-      "skillPath": "skills/needs-reply/SKILL.md",
-      "computedHash": "880805b373b0a5eaafa7a8c61717c714317e03183555e0c974b5c3c6553d7024"
+      "skillPath": ".agents/skills/needs-reply/SKILL.md",
+      "computedHash": "ba20fe24796ca374a24309853801e83f097aa69c135f9d64665c36bf6f03882c"
     },
     "period-in-review": {
       "source": "DecisionNerd/imessage-analysis",
       "sourceType": "github",
-      "skillPath": "skills/period-in-review/SKILL.md",
-      "computedHash": "13d8b0e0ad6d8181a0a0901f9818e01f3afe4a7c01e6173e2005197bf3ef872e"
+      "skillPath": ".agents/skills/period-in-review/SKILL.md",
+      "computedHash": "68a9055ec64208c99431fa73f70906b7b1c86623e809383b123e9e7cd058de27"
     },
     "query-messages": {
       "source": "DecisionNerd/imessage-analysis",
       "sourceType": "github",
-      "skillPath": "skills/query-messages/SKILL.md",
-      "computedHash": "1939cf3ae52ec445baa54de3874714cc337710b24b607a5b1df2fc2c8acac3a6"
+      "skillPath": ".agents/skills/query-messages/SKILL.md",
+      "computedHash": "ecf51e671a3a64f0bf46d25b5cf4eb9750ed1ec13c092f82c631dc12d2e49552"
+    },
+    "recent-conversations": {
+      "source": "DecisionNerd/imessage-analysis",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/recent-conversations/SKILL.md",
+      "computedHash": "e65140e3f2a9e292313157f123917ac3aa08c1a0c0c650aa4214aaae9842f577"
+    },
+    "sync": {
+      "source": "DecisionNerd/imessage-analysis",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/sync/SKILL.md",
+      "computedHash": "905ce0cb33b50383424aa17f9f229a8d9f3b56bb9212587f0863395e4dbc84ba"
     }
   }
 }
