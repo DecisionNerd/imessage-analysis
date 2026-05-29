@@ -1,12 +1,20 @@
 /// Named analysis queries. Each returns a SQL string ready for execution.
 
-pub fn top_contacts(limit: usize, year: Option<i32>, direct_only: bool) -> String {
+pub fn top_contacts(
+    limit: usize,
+    year: Option<i32>,
+    direct_only: bool,
+    direction: Option<&str>,
+) -> String {
     let mut filters = vec!["name IS NOT NULL".to_string()];
     if direct_only {
         filters.push("chat_size = 1".to_string());
     }
     if let Some(y) = year {
         filters.push(format!("year = {y}"));
+    }
+    if let Some(d) = direction {
+        filters.push(d.to_string());
     }
     let where_clause = format!("WHERE {}", filters.join(" AND "));
     format!(
@@ -24,6 +32,7 @@ pub fn time_series(
     window: usize,
     start: Option<&str>,
     end: Option<&str>,
+    direction: Option<&str>,
 ) -> String {
     let mut filters: Vec<String> = vec!["date IS NOT NULL".to_string()];
     if let Some(c) = contact {
@@ -37,6 +46,9 @@ pub fn time_series(
     if let Some(e) = end {
         let escaped = e.replace('\'', "''");
         filters.push(format!("date <= '{escaped}'"));
+    }
+    if let Some(d) = direction {
+        filters.push(d.to_string());
     }
     let where_clause = format!("WHERE {}", filters.join(" AND "));
     format!(
@@ -55,7 +67,7 @@ pub fn time_series(
     )
 }
 
-pub fn reactions(contact: Option<&str>, year: Option<i32>) -> String {
+pub fn reactions(contact: Option<&str>, year: Option<i32>, direction: Option<&str>) -> String {
     let mut filters = vec!["reaction != 'no-reaction'".to_string()];
     if let Some(c) = contact {
         let escaped = c.replace('\'', "''");
@@ -63,6 +75,9 @@ pub fn reactions(contact: Option<&str>, year: Option<i32>) -> String {
     }
     if let Some(y) = year {
         filters.push(format!("year = {y}"));
+    }
+    if let Some(d) = direction {
+        filters.push(d.to_string());
     }
     let where_clause = format!("WHERE {}", filters.join(" AND "));
     format!(
@@ -100,35 +115,39 @@ pub fn links(limit: usize) -> String {
     )
 }
 
-pub fn seasonality_dow() -> &'static str {
-    "SELECT
-         EXTRACT(DOW FROM CAST(timestamp AS TIMESTAMP)) AS dow_number,
-         CASE EXTRACT(DOW FROM CAST(timestamp AS TIMESTAMP))
-             WHEN 0 THEN 'Sunday'
-             WHEN 1 THEN 'Monday'
-             WHEN 2 THEN 'Tuesday'
-             WHEN 3 THEN 'Wednesday'
-             WHEN 4 THEN 'Thursday'
-             WHEN 5 THEN 'Friday'
-             WHEN 6 THEN 'Saturday'
-         END AS day_of_week,
-         SUM(CASE WHEN is_from_me = 1 THEN 1 ELSE 0 END) AS sent,
-         SUM(CASE WHEN is_from_me = 0 THEN 1 ELSE 0 END) AS received
-     FROM messages
-     WHERE timestamp IS NOT NULL
-     GROUP BY dow_number, day_of_week
-     ORDER BY dow_number"
+pub fn seasonality_dow(direction: Option<&str>) -> String {
+    let extra = direction.map(|d| format!(" AND {d}")).unwrap_or_default();
+    format!(
+        "SELECT
+             EXTRACT(DOW FROM CAST(timestamp AS TIMESTAMP)) AS dow_number,
+             CASE EXTRACT(DOW FROM CAST(timestamp AS TIMESTAMP))
+                 WHEN 0 THEN 'Sunday'
+                 WHEN 1 THEN 'Monday'
+                 WHEN 2 THEN 'Tuesday'
+                 WHEN 3 THEN 'Wednesday'
+                 WHEN 4 THEN 'Thursday'
+                 WHEN 5 THEN 'Friday'
+                 WHEN 6 THEN 'Saturday'
+             END AS day_of_week,
+             COUNT(*) AS messages
+         FROM messages
+         WHERE timestamp IS NOT NULL{extra}
+         GROUP BY dow_number, day_of_week
+         ORDER BY dow_number"
+    )
 }
 
-pub fn seasonality_month() -> &'static str {
-    "SELECT
-         month,
-         SUM(CASE WHEN is_from_me = 1 THEN 1 ELSE 0 END) AS sent,
-         SUM(CASE WHEN is_from_me = 0 THEN 1 ELSE 0 END) AS received
-     FROM messages
-     WHERE month IS NOT NULL
-     GROUP BY month
-     ORDER BY month"
+pub fn seasonality_month(direction: Option<&str>) -> String {
+    let extra = direction.map(|d| format!(" AND {d}")).unwrap_or_default();
+    format!(
+        "SELECT
+             month,
+             COUNT(*) AS messages
+         FROM messages
+         WHERE month IS NOT NULL{extra}
+         GROUP BY month
+         ORDER BY month"
+    )
 }
 
 /// Substring search across name and contact_info columns.
@@ -163,10 +182,16 @@ pub fn contact_stats(contact: Option<&str>) -> String {
              COUNT(*) AS total_messages,
              MIN(CAST(date AS VARCHAR)) AS first_date,
              MAX(CAST(date AS VARCHAR)) AS last_date,
-             COUNT(DISTINCT CAST(date AS VARCHAR)) AS active_days
+             COUNT(DISTINCT CAST(date AS VARCHAR)) AS active_days,
+             ROUND(CAST(COUNT(*) AS DOUBLE) /
+                 NULLIF(CAST(
+                     julianday(MAX(CAST(date AS VARCHAR))) -
+                     julianday(MIN(CAST(date AS VARCHAR))) + 1
+                 AS DOUBLE), 0), 2) AS avg_per_day
          FROM messages
          {where_clause}
          GROUP BY name
          ORDER BY total_messages DESC"
     )
 }
+

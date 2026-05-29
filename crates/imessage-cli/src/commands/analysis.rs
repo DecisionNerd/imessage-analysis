@@ -8,7 +8,8 @@ use crate::output::{print_batches, Format};
 
 macro_rules! run_query {
     ($config:expr, $sql:expr, $limit:expr, $fmt:expr) => {{
-        let rt = tokio::runtime::Runtime::new().map_err(|e| imessage_core::error::Error::Config(e.to_string()))?;
+        let rt = tokio::runtime::Runtime::new()
+            .map_err(|e| imessage_core::error::Error::Config(e.to_string()))?;
         rt.block_on(async {
             let engine = QueryEngine::open(&$config.data_dir).await?;
             let batches = engine.execute(&$sql).await?;
@@ -23,9 +24,10 @@ pub fn top_contacts(
     limit: usize,
     year: Option<i32>,
     direct_only: bool,
+    direction: Option<&str>,
     fmt: &Format,
 ) -> Result<()> {
-    run_query!(config, built_in::top_contacts(limit, year, direct_only), limit, fmt)
+    run_query!(config, built_in::top_contacts(limit, year, direct_only, direction), limit, fmt)
 }
 
 pub fn time_series(
@@ -34,14 +36,21 @@ pub fn time_series(
     window: usize,
     start: Option<&str>,
     end: Option<&str>,
+    direction: Option<&str>,
     limit: usize,
     fmt: &Format,
 ) -> Result<()> {
-    run_query!(config, built_in::time_series(contact, window, start, end), limit, fmt)
+    run_query!(config, built_in::time_series(contact, window, start, end, direction), limit, fmt)
 }
 
-pub fn reactions(config: &EtlConfig, contact: Option<&str>, year: Option<i32>, fmt: &Format) -> Result<()> {
-    run_query!(config, built_in::reactions(contact, year), 100, fmt)
+pub fn reactions(
+    config: &EtlConfig,
+    contact: Option<&str>,
+    year: Option<i32>,
+    direction: Option<&str>,
+    fmt: &Format,
+) -> Result<()> {
+    run_query!(config, built_in::reactions(contact, year, direction), 100, fmt)
 }
 
 pub fn effects(config: &EtlConfig, year: Option<i32>, fmt: &Format) -> Result<()> {
@@ -52,10 +61,15 @@ pub fn links(config: &EtlConfig, limit: usize, fmt: &Format) -> Result<()> {
     run_query!(config, built_in::links(limit), limit, fmt)
 }
 
-pub fn seasonality(config: &EtlConfig, kind: &str, fmt: &Format) -> Result<()> {
+pub fn seasonality(
+    config: &EtlConfig,
+    kind: &str,
+    direction: Option<&str>,
+    fmt: &Format,
+) -> Result<()> {
     let sql = match kind {
-        "month" => built_in::seasonality_month().to_string(),
-        _ => built_in::seasonality_dow().to_string(),
+        "month" => built_in::seasonality_month(direction),
+        _ => built_in::seasonality_dow(direction),
     };
     run_query!(config, sql, 50, fmt)
 }

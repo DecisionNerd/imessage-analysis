@@ -1,4 +1,5 @@
-use comfy_table::{presets::UTF8_FULL_CONDENSED, Table};
+use comfy_table::{presets::UTF8_FULL_CONDENSED, Cell, CellAlignment, ColumnConstraint, Table, Width};
+use datafusion::arrow::datatypes::DataType;
 use datafusion::arrow::record_batch::RecordBatch;
 use datafusion::arrow::util::display::{ArrayFormatter, FormatOptions};
 
@@ -31,11 +32,23 @@ pub fn print_batches(batches: &[RecordBatch], format: &Format, limit: usize) {
     }
 }
 
-/// Build a per-column formatter for every column in a batch.
-fn make_formatters<'a>(
-    batch: &'a RecordBatch,
-    opts: &'a FormatOptions,
-) -> Vec<ArrayFormatter<'a>> {
+fn is_numeric(dt: &DataType) -> bool {
+    matches!(
+        dt,
+        DataType::Int8
+            | DataType::Int16
+            | DataType::Int32
+            | DataType::Int64
+            | DataType::UInt8
+            | DataType::UInt16
+            | DataType::UInt32
+            | DataType::UInt64
+            | DataType::Float32
+            | DataType::Float64
+    )
+}
+
+fn make_formatters<'a>(batch: &'a RecordBatch, opts: &'a FormatOptions) -> Vec<ArrayFormatter<'a>> {
     (0..batch.num_columns())
         .map(|i| ArrayFormatter::try_new(batch.column(i).as_ref(), opts).unwrap())
         .collect()
@@ -49,27 +62,44 @@ fn print_table(batches: &[RecordBatch], limit: usize) {
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_header(schema.fields().iter().map(|f| f.name().as_str()));
 
-    let mut printed = 0;
-    let mut truncated = false;
-    'outer: for batch in batches {
-        let formatters = make_formatters(batch, &opts);
-        for row in 0..batch.num_rows() {
-            if printed >= limit {
-                truncated = true;
-                break 'outer;
-            }
-            let cells: Vec<String> = formatters
-                .iter()
-                .map(|f| f.value(row).to_string())
-                .collect();
-            table.add_row(cells);
-            printed += 1;
+    // Right-align numeric columns
+    for (i, field) in schema.fields().iter().enumerate() {
+        if is_numeric(field.data_type()) {
+            table.column_mut(i).map(|c| {
+                c.set_cell_alignment(CellAlignment::Right)
+            });
         }
     }
 
+    let mut printed = 0;
+    let mut total = 0usize;
+    let mut truncated = false;
+
+    'outer: for batch in batches {
+        let formatters = make_formatters(batch, &opts);
+        for row in 0..batch.num_rows() {
+            total += 1;
+            if printed < limit {
+                let cells: Vec<Cell> = formatters
+                    .iter()
+                    .map(|f| Cell::new(f.value(row).to_string()))
+                    .collect();
+                table.add_row(cells);
+                printed += 1;
+            } else {
+                truncated = true;
+            }
+        }
+    }
+    // If truncated we need to keep counting — the loop already does that.
+    // But we can't know total without scanning all batches, which we do above.
+    let _ = truncated; // consumed below via total/printed
+
     println!("{table}");
-    if truncated {
-        println!("(showing {limit} rows — use --limit to see more)");
+    if total > printed {
+        println!("({printed} of {total} rows — use --limit to see more)");
+    } else {
+        println!("({total} rows)");
     }
 }
 

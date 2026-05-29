@@ -1,7 +1,7 @@
 use datafusion::arrow::util::display::{ArrayFormatter, FormatOptions};
 use imessage_core::{
     query::{built_in, QueryEngine},
-    storage::metadata::EtlMetadata,
+    storage::{metadata::EtlMetadata, parquet::messages_path},
 };
 use serde_json::{json, Value};
 
@@ -112,6 +112,11 @@ pub fn list() -> Value {
             }
         },
         {
+            "name": "status",
+            "description": "Show dataset status — last sync time, total message count, and file size.",
+            "inputSchema": { "type": "object", "properties": {} }
+        },
+        {
             "name": "schema",
             "description": "Return the dataset schema (column names and types).",
             "inputSchema": { "type": "object", "properties": {} }
@@ -135,6 +140,25 @@ pub async fn call(state: &ServerState, name: &str, args: Value) -> Result<Value,
                 format!("{} messages synced.", summary.rows_written)
             };
             Ok(json!({ "content": [{ "type": "text", "text": msg }] }))
+        }
+
+        "status" => {
+            let meta = EtlMetadata::load(&state.config.data_dir).map_err(|e| e.to_string())?;
+            let result = match meta {
+                None => json!({ "synced": false, "message": "No dataset found. Call sync first." }),
+                Some(m) => {
+                    let parquet = messages_path(&state.config.data_dir);
+                    let size_bytes = std::fs::metadata(&parquet).map(|md| md.len()).unwrap_or(0);
+                    json!({
+                        "synced": true,
+                        "total_messages": m.total_messages,
+                        "last_sync": m.last_run_utc,
+                        "size_bytes": size_bytes,
+                        "schema_version": m.schema_version
+                    })
+                }
+            };
+            Ok(json!({ "content": [{ "type": "text", "text": serde_json::to_string(&result).unwrap() }] }))
         }
 
         "schema" => {
@@ -173,21 +197,33 @@ fn build_sql(name: &str, args: &Value) -> Result<String, String> {
         args.get(key).and_then(|v| v.as_u64()).map(|v| v as usize).unwrap_or(default)
     };
 
+    let direction: Option<String> = match (bool_arg("sent"), bool_arg("received")) {
+        (true, false) => Some("is_from_me = 1".to_string()),
+        (false, true) => Some("is_from_me = 0".to_string()),
+        _ => None,
+    };
+    let dir = direction.as_deref();
+
+    // Expand --year shorthand for time_series
+    let ts_start: Option<String> = int_arg("year").map(|y| format!("{y}-01-01")).or_else(|| str_arg("start"));
+    let ts_end: Option<String> = int_arg("year").map(|y| format!("{y}-12-31")).or_else(|| str_arg("end"));
+
     Ok(match name {
         "query" => str_arg("sql").ok_or("missing `sql` argument")?,
-        "top_contacts" => built_in::top_contacts(usize_arg("limit", 10), int_arg("year"), bool_arg("direct_only")),
+        "top_contacts" => built_in::top_contacts(usize_arg("limit", 10), int_arg("year"), bool_arg("direct_only"), dir),
         "time_series" => built_in::time_series(
             str_arg("contact").as_deref().map(str::to_string).as_deref(),
             usize_arg("window", 28),
-            str_arg("start").as_deref().map(str::to_string).as_deref(),
-            str_arg("end").as_deref().map(str::to_string).as_deref(),
+            ts_start.as_deref(),
+            ts_end.as_deref(),
+            dir,
         ),
-        "reactions" => built_in::reactions(str_arg("contact").as_deref().map(str::to_string).as_deref(), int_arg("year")),
+        "reactions" => built_in::reactions(str_arg("contact").as_deref().map(str::to_string).as_deref(), int_arg("year"), dir),
         "effects" => built_in::effects(int_arg("year")),
         "links" => built_in::links(usize_arg("limit", 20)),
         "seasonality" => match args.get("kind").and_then(|v| v.as_str()).unwrap_or("dow") {
-            "month" => built_in::seasonality_month().to_string(),
-            _ => built_in::seasonality_dow().to_string(),
+            "month" => built_in::seasonality_month(dir),
+            _ => built_in::seasonality_dow(dir),
         },
         "contact_stats" => built_in::contact_stats(str_arg("contact").as_deref().map(str::to_string).as_deref()),
         "search_contacts" => {

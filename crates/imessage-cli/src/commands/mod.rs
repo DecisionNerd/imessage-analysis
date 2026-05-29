@@ -1,5 +1,6 @@
 pub mod analysis;
 pub mod query;
+pub mod status;
 pub mod sync;
 
 use imessage_core::models::EtlConfig;
