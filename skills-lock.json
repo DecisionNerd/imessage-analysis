@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "skills": {
+    "compare-contacts": {
+      "source": "DecisionNerd/imessage-analysis",
+      "sourceType": "github",
+      "skillPath": "skills/compare-contacts/SKILL.md",
+      "computedHash": "ecc971ff705821f4326e29c27068e76ec941617a5c68462e136cd9f871d01d87"
+    },
+    "contact-deep-dive": {
+      "source": "DecisionNerd/imessage-analysis",
+      "sourceType": "github",
+      "skillPath": "skills/contact-deep-dive/SKILL.md",
+      "computedHash": "49d20f0f2fe64f7a30fa405b670a62aa957a443766dca158032eeb4459764df7"
+    },
+    "needs-reply": {
+      "source": "DecisionNerd/imessage-analysis",
+      "sourceType": "github",
+      "skillPath": "skills/needs-reply/SKILL.md",
+      "computedHash": "880805b373b0a5eaafa7a8c61717c714317e03183555e0c974b5c3c6553d7024"
+    },
+    "period-in-review": {
+      "source": "DecisionNerd/imessage-analysis",
+      "sourceType": "github",
+      "skillPath": "skills/period-in-review/SKILL.md",
+      "computedHash": "13d8b0e0ad6d8181a0a0901f9818e01f3afe4a7c01e6173e2005197bf3ef872e"
+    },
+    "query-messages": {
+      "source": "DecisionNerd/imessage-analysis",
+      "sourceType": "github",
+      "skillPath": "skills/query-messages/SKILL.md",
+      "computedHash": "1939cf3ae52ec445baa54de3874714cc337710b24b607a5b1df2fc2c8acac3a6"
+    }
+  }
+}

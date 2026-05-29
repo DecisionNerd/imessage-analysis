@@ -19,6 +19,14 @@ pub fn run(config: &EtlConfig) -> Result<()> {
             println!("Last sync:    {}", m.last_run_utc.as_deref().unwrap_or("unknown"));
             println!("Size:         {size}");
             println!("Schema:       v{}", m.schema_version);
+
+            if m.contacts_resolved == 0 {
+                println!("Contacts:     ⚠ not resolved (names showing as phone numbers)");
+                println!("              → System Settings → Privacy & Security → Contacts");
+                println!("              → or use --contacts contacts.toml");
+            } else {
+                println!("Contacts:     {} resolved", m.contacts_resolved);
+            }
         }
     }
 

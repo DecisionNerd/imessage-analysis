@@ -134,11 +134,16 @@ pub async fn call(state: &ServerState, name: &str, args: Value) -> Result<Value,
                     .map_err(|e| e.to_string())?,
             };
             state.invalidate_engine().await;
-            let msg = if summary.rows_written == 0 {
+            let mut msg = if summary.rows_written == 0 {
                 "Already up to date.".to_string()
             } else {
                 format!("{} messages synced.", summary.rows_written)
             };
+            if summary.contacts_resolved == 0 {
+                msg.push_str("\n\n⚠ Contact names were not resolved — names will show as phone numbers. Grant Contacts access in System Settings → Privacy & Security → Contacts, then re-run sync.");
+            } else {
+                msg.push_str(&format!("\n{} contacts resolved.", summary.contacts_resolved));
+            }
             Ok(json!({ "content": [{ "type": "text", "text": msg }] }))
         }
 
@@ -154,7 +159,13 @@ pub async fn call(state: &ServerState, name: &str, args: Value) -> Result<Value,
                         "total_messages": m.total_messages,
                         "last_sync": m.last_run_utc,
                         "size_bytes": size_bytes,
-                        "schema_version": m.schema_version
+                        "schema_version": m.schema_version,
+                        "contacts_resolved": m.contacts_resolved,
+                        "contacts_warning": if m.contacts_resolved == 0 {
+                            Some("Contact names were not resolved — names will show as phone numbers. Grant Contacts access in System Settings → Privacy & Security → Contacts, then re-run sync.")
+                        } else {
+                            None
+                        }
                     })
                 }
             };

@@ -9,6 +9,9 @@ pub struct EtlMetadata {
     pub last_run_utc: Option<String>,
     pub total_messages: u64,
     pub schema_version: u32,
+    /// Number of contacts resolved from Contacts.app + config overrides.
+    /// 0 means name resolution did not work — names will show as phone numbers.
+    pub contacts_resolved: usize,
 }
 
 impl EtlMetadata {

@@ -63,6 +63,16 @@ pub fn run(config: &EtlConfig, force: bool, quiet: bool) -> Result<()> {
         } else {
             println!("✓ Synced — {} new messages", summary.rows_written);
         }
+
+        if summary.contacts_resolved == 0 {
+            eprintln!();
+            eprintln!("⚠ Contact names were not resolved — messages will show as phone numbers.");
+            eprintln!("  To fix: grant Contacts access to this app in");
+            eprintln!("  System Settings → Privacy & Security → Contacts");
+            eprintln!("  Or add a contacts override file: imessage-analysis sync --contacts contacts.toml");
+        } else {
+            println!("  {} contacts resolved", summary.contacts_resolved);
+        }
     }
 
     Ok(())

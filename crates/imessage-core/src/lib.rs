@@ -21,6 +21,7 @@ pub fn run_etl_since(config: &EtlConfig, since_rowid: i64) -> Result<EtlSummary>
 
     tracing::info!(count = raw.messages.len(), "Transforming rows");
     let contacts = contacts::resolve(config.auto_contacts, config.contacts_config.as_deref())?;
+    let contacts_resolved = contacts.len();
     let batch = etl::transforms::transform(&raw.messages, &raw.chat_members, &contacts)?;
 
     tracing::info!(rows = batch.num_rows(), "Writing Parquet");
@@ -31,6 +32,7 @@ pub fn run_etl_since(config: &EtlConfig, since_rowid: i64) -> Result<EtlSummary>
         last_run_utc: Some(chrono::Utc::now().to_rfc3339()),
         total_messages: batch.num_rows() as u64,
         schema_version: Meta::CURRENT_SCHEMA_VERSION,
+        contacts_resolved,
     };
     meta.save(&config.data_dir)?;
 
@@ -38,10 +40,12 @@ pub fn run_etl_since(config: &EtlConfig, since_rowid: i64) -> Result<EtlSummary>
     Ok(EtlSummary {
         rows_written: batch.num_rows(),
         max_rowid: raw.max_message_rowid,
+        contacts_resolved,
     })
 }
 
 pub struct EtlSummary {
     pub rows_written: usize,
     pub max_rowid: i64,
+    pub contacts_resolved: usize,
 }
