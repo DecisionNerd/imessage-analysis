@@ -31,10 +31,12 @@ pub fn time_series(
         filters.push(format!("name = '{escaped}'"));
     }
     if let Some(s) = start {
-        filters.push(format!("date >= '{s}'"));
+        let escaped = s.replace('\'', "''");
+        filters.push(format!("date >= '{escaped}'"));
     }
     if let Some(e) = end {
-        filters.push(format!("date <= '{e}'"));
+        let escaped = e.replace('\'', "''");
+        filters.push(format!("date <= '{escaped}'"));
     }
     let where_clause = format!("WHERE {}", filters.join(" AND "));
     format!(

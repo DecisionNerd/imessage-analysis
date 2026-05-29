@@ -199,9 +199,13 @@ fn batches_to_json(
     'outer: for batch in batches {
         let schema = batch.schema();
         let field_names: Vec<&str> = schema.fields().iter().map(|f| f.name().as_str()).collect();
-        let formatters: Vec<ArrayFormatter> = (0..batch.num_columns())
-            .map(|i| ArrayFormatter::try_new(batch.column(i).as_ref(), &opts).unwrap())
-            .collect();
+        let formatters: Vec<ArrayFormatter> = match (0..batch.num_columns())
+            .map(|i| ArrayFormatter::try_new(batch.column(i).as_ref(), &opts))
+            .collect::<Result<Vec<_>, _>>()
+        {
+            Ok(f) => f,
+            Err(_) => continue,
+        };
 
         for row in 0..batch.num_rows() {
             if count >= limit {

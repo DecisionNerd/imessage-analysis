@@ -47,6 +47,6 @@ If you do not want the tool to query Contacts.app (e.g. for privacy, or because 
 imessage-analysis etl --no-auto-contacts --contacts ~/my-contacts.toml
 ```
 
-## Phone number normalisation
+## Phone number normalization
 
 iMessage stores handles in various formats (`+1 (415) 555-1234`, `+14155551234`, `4155551234`). The tool strips spaces, dashes, and parentheses when matching, but keeps the leading `+` if present. For best results, use E.164 format (`+<country code><number>`) in your config file.

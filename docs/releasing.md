@@ -42,7 +42,7 @@ This project follows [Semantic Versioning](https://semver.org):
 - **Minor** (`v0.x.0`) — new features, backward-compatible
 - **Major** (`vx.0.0`) — breaking changes to the CLI interface or Parquet schema
 
-When the Parquet schema changes (new or renamed columns), increment `schema_version` in `storage/metadata.rs` so that stale datasets are detected and users are prompted to re-run `etl`.
+When the Parquet schema changes (new or renamed columns), increment `schema_version` in `crates/imessage-core/src/storage/metadata.rs` so that stale datasets are detected and users are prompted to re-run `etl`.
 
 ## Homebrew tap structure
 

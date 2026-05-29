@@ -11,7 +11,13 @@ pub fn run(config: &EtlConfig) -> Result<()> {
     spinner.set_message("Reading from chat.db…");
     spinner.enable_steady_tick(std::time::Duration::from_millis(80));
 
-    let summary = imessage_core::run_etl(config)?;
+    let summary = match imessage_core::run_etl(config) {
+        Ok(s) => s,
+        Err(e) => {
+            spinner.finish_and_clear();
+            return Err(e);
+        }
+    };
 
     spinner.finish_and_clear();
     println!(

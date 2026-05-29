@@ -50,10 +50,12 @@ fn print_table(batches: &[RecordBatch], limit: usize) {
     table.set_header(schema.fields().iter().map(|f| f.name().as_str()));
 
     let mut printed = 0;
+    let mut truncated = false;
     'outer: for batch in batches {
         let formatters = make_formatters(batch, &opts);
         for row in 0..batch.num_rows() {
             if printed >= limit {
+                truncated = true;
                 break 'outer;
             }
             let cells: Vec<String> = formatters
@@ -66,7 +68,7 @@ fn print_table(batches: &[RecordBatch], limit: usize) {
     }
 
     println!("{table}");
-    if printed >= limit {
+    if truncated {
         println!("(showing {limit} rows — use --limit to see more)");
     }
 }
@@ -83,15 +85,11 @@ fn print_json(batches: &[RecordBatch], limit: usize) {
             if printed >= limit {
                 break 'outer;
             }
-            let pairs: Vec<String> = fields
-                .iter()
-                .zip(formatters.iter())
-                .map(|(name, f)| {
-                    let val = f.value(row).to_string();
-                    format!("\"{}\":\"{}\"", name, val.replace('"', "\\\""))
-                })
-                .collect();
-            println!("{{{}}}", pairs.join(","));
+            let mut map = serde_json::Map::new();
+            for (name, f) in fields.iter().zip(formatters.iter()) {
+                map.insert(name.to_string(), serde_json::Value::String(f.value(row).to_string()));
+            }
+            println!("{}", serde_json::Value::Object(map));
             printed += 1;
         }
     }

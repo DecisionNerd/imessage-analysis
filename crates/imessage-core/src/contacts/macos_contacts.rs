@@ -23,6 +23,12 @@ pub fn fetch() -> Result<HashMap<String, String>> {
         // Wrap each static key in a Retained by casting through *mut AnyObject.
         // The keys are static, so retain is safe and won't be deallocated.
         fn retain_key(key: &'static NSString) -> Retained<ProtocolObject<dyn CNKeyDescriptor>> {
+            // SAFETY: NSString implements CNKeyDescriptor (verified at compile time via the
+            // `unsafe impl CNKeyDescriptor for NSString` in objc2-contacts). The memory layout
+            // of Retained<AnyObject> and Retained<ProtocolObject<dyn CNKeyDescriptor>> is
+            // identical (both are NonNull pointer wrappers) and ProtocolObject::from_retained
+            // cannot be used here because ImplementedBy<AnyObject> is not generated for this
+            // protocol type.
             unsafe {
                 let ptr: *mut AnyObject = key as *const NSString as *mut NSString as *mut AnyObject;
                 let retained: Retained<AnyObject> = Retained::retain(ptr).unwrap();
@@ -83,7 +89,17 @@ pub fn fetch() -> Result<HashMap<String, String>> {
             return Ok(HashMap::new());
         }
 
-        Ok(entries.into_inner().into_iter().collect())
+        let mut map = HashMap::new();
+        for (key, value) in entries.into_inner() {
+            if let Some(existing) = map.get(&key) {
+                if existing != &value {
+                    tracing::warn!("Duplicate contact key {key:?}: keeping {existing:?}, ignoring {value:?}");
+                }
+            } else {
+                map.insert(key, value);
+            }
+        }
+        Ok(map)
     }
 }
 

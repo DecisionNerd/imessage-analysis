@@ -68,7 +68,7 @@ pub async fn handle(state: &ServerState, msg: Value) -> Option<Value> {
             tools::call(state, tool_name, args).await
         }
 
-        _ => Err(format!("Method not found: {method}")),
+        _ => return Some(error_response(id, -32601, &format!("Method not found: {method}"))),
     };
 
     Some(match result {
