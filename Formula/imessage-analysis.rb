@@ -18,6 +18,22 @@ class ImessageAnalysis < Formula
     bin.install "target/release/imessage-analysis"
     bin.install "target/release/imessage-mcp"
 
+    # Sign with Contacts entitlement so macOS shows the permission dialog on first sync.
+    # Without this the binary has no bundle identifier and TCC silently denies it.
+    entitlements = buildpath/"entitlements.plist"
+    entitlements.write <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+      <dict>
+          <key>com.apple.security.contacts.read-write</key>
+          <true/>
+      </dict>
+      </plist>
+    XML
+    system "codesign", "--force", "--sign", "-",
+           "--entitlements", entitlements, bin/"imessage-analysis"
+
     # Shell completions
     generate_completions_from_executable(bin/"imessage-analysis", "completions")
   end

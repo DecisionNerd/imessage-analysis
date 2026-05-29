@@ -22,8 +22,7 @@ pub fn run(config: &EtlConfig) -> Result<()> {
 
             if m.contacts_resolved == 0 {
                 println!("Contacts:     ⚠ not resolved (names showing as phone numbers)");
-                println!("              → System Settings → Privacy & Security → Contacts");
-                println!("              → or use --contacts contacts.toml");
+                println!("              → run `imessage-analysis sync` to be prompted for access");
             } else {
                 println!("Contacts:     {} resolved", m.contacts_resolved);
             }

@@ -7,6 +7,18 @@ use serde_json::{json, Value};
 
 use crate::server::ServerState;
 
+fn format_bytes(n: u64) -> String {
+    const MB: u64 = 1024 * 1024;
+    const KB: u64 = 1024;
+    if n >= MB {
+        format!("{:.1} MB", n as f64 / MB as f64)
+    } else if n >= KB {
+        format!("{:.1} KB", n as f64 / KB as f64)
+    } else {
+        format!("{n} B")
+    }
+}
+
 pub fn list() -> Value {
     json!([
         {
@@ -166,6 +178,7 @@ pub async fn call(state: &ServerState, name: &str, args: Value) -> Result<Value,
                         "total_messages": m.total_messages,
                         "last_sync": m.last_run_utc,
                         "size_bytes": size_bytes,
+                        "size_formatted": format_bytes(size_bytes),
                         "schema_version": m.schema_version,
                         "contacts_resolved": m.contacts_resolved,
                         "contacts_warning": if m.contacts_resolved == 0 {

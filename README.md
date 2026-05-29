@@ -24,19 +24,56 @@ Query and analyse your entire Mac iMessage history — from the terminal, an AI 
 
 ## Quickstart
 
-> **macOS required.** Grant Terminal Full Disk Access first:
-> System Settings → Privacy & Security → Full Disk Access
+### With Claude Code, Codex, or Cursor
 
-### CLI
+**1.** Add the skills:
+
+```sh
+npx skills add DecisionNerd/imessage-analysis
+```
+
+**2.** Run the install skill:
+
+```
+/imessage-analysis-install
+```
+
+Checks for the binary, registers the MCP server with the right command for your agent, and walks you through the first sync.
+
+**3.** Ask anything about your messages:
+
+> *"Who have I texted most this year?"*
+> *"Give me a deep dive on Alice"*
+> *"Who's been waiting on a reply from me?"*
+
+### With any other client (Claude Desktop, ChatGPT, Windsurf…)
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/DecisionNerd/imessage-analysis/main/scripts/install.sh | bash
+```
+
+Auto-detects and registers with Claude Desktop, Cursor, Claude Code, and Codex. See [MCP setup](docs/mcp.md) for manual config.
+
+### With the CLI
+
+**1.** Grant **Terminal Full Disk Access**:
+
+> System Settings → Privacy & Security → Full Disk Access → enable Terminal
+
+**2.** Install:
 
 ```sh
 brew tap DecisionNerd/tap
 brew install imessage-analysis
 ```
 
+**3.** First sync from Apple Terminal.app (see note above):
+
 ```sh
 imessage-analysis sync
 ```
+
+**4.** Explore:
 
 ```sh
 imessage-analysis status
@@ -47,26 +84,11 @@ imessage-analysis search-contacts alice
 imessage-analysis query "SELECT year, COUNT(*) AS n FROM messages GROUP BY year ORDER BY year"
 ```
 
-### MCP (AI agents)
+---
 
-Install and configure in one step:
+## Use with Claude Desktop
 
-```sh
-npx skills add DecisionNerd/imessage-analysis
-```
-
-Run `/imessage-analysis` in Claude Code — it installs the binary, grants permissions, registers `imessage-mcp`, and syncs your data.
-
-Then add the analysis skills to use with Claude:
-
-```sh
-npx skills add DecisionNerd/imessage-analysis --skill period-in-review
-npx skills add DecisionNerd/imessage-analysis --skill needs-reply
-npx skills add DecisionNerd/imessage-analysis --skill contact-deep-dive
-npx skills add DecisionNerd/imessage-analysis --skill compare-contacts
-```
-
-Or configure manually in Claude Desktop (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ```json
 {
@@ -76,7 +98,9 @@ Or configure manually in Claude Desktop (`~/Library/Application Support/Claude/c
 }
 ```
 
-### Python
+---
+
+## Use with Python
 
 ```sh
 pip install imessage-analysis
@@ -85,10 +109,13 @@ pip install imessage-analysis
 ```python
 import imessage_analysis
 
-imessage_analysis.sync()
 df = imessage_analysis.top_contacts().to_pandas()
 df = imessage_analysis.query("SELECT * FROM messages WHERE year = 2024").to_pandas()
 ```
+
+All query functions return `pyarrow.Table`. Call `.to_pandas()` to convert.
+
+> **Contact names:** `imessage_analysis.sync()` picks up new messages but cannot resolve contact names — the Python interpreter doesn't have Contacts access. Run `imessage-analysis sync` from the CLI to keep names up to date.
 
 ---
 
@@ -123,8 +150,8 @@ Requires macOS. Rust 1.70+ for source builds. Python 3.11+ for the Python packag
 ## Contributing
 
 1. Fork the repo and create a branch
-2. Run `cargo test --all` — all tests must pass
-3. Run `cargo clippy -- -D warnings` and `cargo fmt`
+2. `cargo test --all` — all tests must pass
+3. `cargo clippy -- -D warnings` and `cargo fmt`
 4. Open a pull request — CI runs automatically
 
 This project uses [Conventional Commits](https://www.conventionalcommits.org/).

@@ -2,46 +2,104 @@
 
 `imessage-mcp` is an MCP (Model Context Protocol) server that exposes your iMessage data to AI agents. It speaks JSON-RPC 2.0 over stdio, the standard transport for local MCP servers.
 
-## One-command setup (Claude Code)
+---
+
+## Setup
+
+### One-command (Claude Code / Codex)
 
 ```sh
 npx skills add DecisionNerd/imessage-analysis
 ```
 
-Then sync — all in one session.
+Then run `/imessage-analysis-install` in your agent — it handles binary install, signing, MCP registration, and first sync instructions.
 
-## Setup with Claude Desktop
+### Shell script (any client)
 
-1. Run the ETL at least once so a dataset exists:
-   ```sh
-   imessage-analysis sync
-   ```
+```sh
+curl -fsSL https://raw.githubusercontent.com/DecisionNerd/imessage-analysis/main/scripts/install.sh | bash
+```
 
-2. Edit `~/Library/Application Support/Claude/claude_desktop_config.json` and add the server:
-   ```json
-   {
-     "mcpServers": {
-       "imessage": {
-         "command": "imessage-mcp"
-       }
-     }
-   }
-   ```
-   If `imessage-mcp` is not on your `$PATH`, use the absolute path (e.g. `/usr/local/bin/imessage-mcp` for a Homebrew install, or `~/.cargo/bin/imessage-mcp` for a source build).
+Detects and registers with Claude Code, Codex, Claude Desktop, and Cursor automatically.
 
-3. Restart Claude Desktop.
+### Manual setup by client
 
-You can now ask Claude things like:
-- *"Who do I text the most?"*
-- *"How many messages did I send in 2024?"*
-- *"What are my most-used message reactions?"*
-- *"Show me my messaging trends over the last year."*
+#### Claude Code
+
+```sh
+claude mcp add imessage-analysis $(which imessage-mcp)
+```
+
+#### Codex
+
+```sh
+codex mcp add imessage-analysis -- $(which imessage-mcp)
+```
+
+#### Claude Desktop
+
+Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "imessage-analysis": {
+      "command": "imessage-mcp"
+    }
+  }
+}
+```
+
+Restart Claude Desktop after saving.
+
+#### Cursor
+
+Edit `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` in your project:
+
+```json
+{
+  "mcpServers": {
+    "imessage-analysis": {
+      "command": "imessage-mcp"
+    }
+  }
+}
+```
+
+Restart Cursor after saving. If you opened this repo in Cursor, `.cursor/mcp.json` is already included.
+
+#### ChatGPT desktop
+
+MCP configuration path varies by app version. Use the same `mcpServers` JSON format above and point `command` at the absolute path to `imessage-mcp`:
+
+```sh
+which imessage-mcp   # get the absolute path
+```
+
+---
+
+## First sync
+
+Run the first sync from **Apple Terminal.app** — not iTerm2, tmux, cmux, or other multiplexers. macOS requires a direct window-server connection to show the Contacts permission dialog.
+
+```sh
+imessage-analysis sync
+```
+
+Grant Contacts access when prompted. After that, `sync` works from any terminal. If you have an existing dataset with no contact names, rebuild it:
+
+```sh
+imessage-analysis sync --force
+```
+
+---
 
 ## Available tools
 
 | Tool | Description |
 |---|---|
 | `sync` | Build dataset on first run, update incrementally after that |
+| `status` | Dataset freshness, message count, size |
 | `query` | Execute arbitrary SQL against the `messages` table |
 | `search_contacts` | Find contacts by name, phone, or email |
 | `top_contacts` | Most-messaged contacts |
@@ -108,8 +166,8 @@ All parameters are optional unless noted.
 | `contact` | string | Filter to a specific contact |
 | `limit` | integer | Max contacts to return (default 100) |
 
+---
+
 ## Keeping data fresh
 
 The server holds the dataset in memory for the lifetime of the process. After calling `sync`, the in-memory index is automatically re-initialised — you do not need to restart the server.
-
-`sync` handles everything automatically: full build on first run, incremental update on subsequent calls.

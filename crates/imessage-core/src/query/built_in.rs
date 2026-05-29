@@ -185,8 +185,7 @@ pub fn contact_stats(contact: Option<&str>) -> String {
              COUNT(DISTINCT CAST(date AS VARCHAR)) AS active_days,
              ROUND(CAST(COUNT(*) AS DOUBLE) /
                  NULLIF(CAST(
-                     julianday(MAX(CAST(date AS VARCHAR))) -
-                     julianday(MIN(CAST(date AS VARCHAR))) + 1
+                     DATEDIFF('day', CAST(MIN(CAST(date AS VARCHAR)) AS DATE), CAST(MAX(CAST(date AS VARCHAR)) AS DATE)) + 1
                  AS DOUBLE), 0), 2) AS avg_per_day
          FROM messages
          {where_clause}

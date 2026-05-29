@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "imessage-analysis": {
+      "command": "imessage-mcp"
+    }
+  }
+}
