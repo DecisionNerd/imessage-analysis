@@ -8,6 +8,8 @@ data/
 # Python
 __pycache__/
 *.pyc
+*.so
+*.dylib
 .venv/
 dist/
 *.egg-info/

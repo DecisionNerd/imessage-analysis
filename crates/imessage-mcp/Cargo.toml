@@ -17,5 +17,5 @@ thiserror.workspace = true
 tracing.workspace = true
 tracing-subscriber = "0.3"
 dirs-next = "2"
-datafusion = "46"
-arrow = { version = "54", features = ["chrono-tz"] }
+datafusion = "53"
+arrow = { version = "58", features = ["chrono-tz"] }

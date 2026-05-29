@@ -9,11 +9,11 @@ authors.workspace = true
 rusqlite = { version = "0.32", features = ["bundled"] }
 
 # Arrow / Parquet
-arrow = { version = "54", features = ["chrono-tz"] }
-parquet = { version = "54", features = ["arrow", "snap"] }
+arrow = { version = "58", features = ["chrono-tz"] }
+parquet = { version = "58", features = ["arrow", "snap"] }
 
 # Query layer
-datafusion = "46"
+datafusion = "53"
 
 # Async (DataFusion requires it)
 tokio.workspace = true
