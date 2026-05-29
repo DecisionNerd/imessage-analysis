@@ -16,3 +16,6 @@ serde_json.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
 tracing-subscriber = "0.3"
+dirs-next = "2"
+datafusion = "46"
+arrow = { version = "54", features = ["chrono-tz"] }

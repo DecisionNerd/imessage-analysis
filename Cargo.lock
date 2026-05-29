@@ -1791,6 +1791,9 @@ dependencies = [
 name = "imessage-mcp"
 version = "0.1.0"
 dependencies = [
+ "arrow",
+ "datafusion",
+ "dirs-next",
  "imessage-core",
  "serde",
  "serde_json",
