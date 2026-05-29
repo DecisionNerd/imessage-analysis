@@ -1,4 +1,4 @@
-use comfy_table::{presets::UTF8_FULL_CONDENSED, Cell, CellAlignment, ColumnConstraint, Table, Width};
+use comfy_table::{presets::UTF8_FULL_CONDENSED, Cell, CellAlignment, Table};
 use datafusion::arrow::datatypes::DataType;
 use datafusion::arrow::record_batch::RecordBatch;
 use datafusion::arrow::util::display::{ArrayFormatter, FormatOptions};
@@ -73,9 +73,8 @@ fn print_table(batches: &[RecordBatch], limit: usize) {
 
     let mut printed = 0;
     let mut total = 0usize;
-    let mut truncated = false;
 
-    'outer: for batch in batches {
+    for batch in batches {
         let formatters = make_formatters(batch, &opts);
         for row in 0..batch.num_rows() {
             total += 1;
@@ -86,14 +85,9 @@ fn print_table(batches: &[RecordBatch], limit: usize) {
                     .collect();
                 table.add_row(cells);
                 printed += 1;
-            } else {
-                truncated = true;
             }
         }
     }
-    // If truncated we need to keep counting — the loop already does that.
-    // But we can't know total without scanning all batches, which we do above.
-    let _ = truncated; // consumed below via total/printed
 
     println!("{table}");
     if total > printed {

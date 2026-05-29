@@ -116,7 +116,7 @@ fn top_contacts<'py>(
     data_dir: Option<String>,
 ) -> PyResult<Bound<'py, PyAny>> {
     let config = make_config(None, data_dir, None, false);
-    run_sql(py, &config, &built_in::top_contacts(limit, year, direct_only))
+    run_sql(py, &config, &built_in::top_contacts(limit, year, direct_only, None))
 }
 
 /// Daily message counts with rolling average. Returns a pyarrow.Table.
@@ -136,6 +136,7 @@ fn time_series<'py>(
         window,
         start.as_deref(),
         end.as_deref(),
+        None,
     ))
 }
 
@@ -149,7 +150,7 @@ fn reactions<'py>(
     data_dir: Option<String>,
 ) -> PyResult<Bound<'py, PyAny>> {
     let config = make_config(None, data_dir, None, false);
-    run_sql(py, &config, &built_in::reactions(contact.as_deref(), year))
+    run_sql(py, &config, &built_in::reactions(contact.as_deref(), year, None))
 }
 
 /// Message effect breakdown. Returns a pyarrow.Table.
@@ -186,8 +187,8 @@ fn seasonality<'py>(
 ) -> PyResult<Bound<'py, PyAny>> {
     let config = make_config(None, data_dir, None, false);
     let sql = match kind {
-        "month" => built_in::seasonality_month().to_string(),
-        _ => built_in::seasonality_dow().to_string(),
+        "month" => built_in::seasonality_month(None).to_string(),
+        _ => built_in::seasonality_dow(None).to_string(),
     };
     run_sql(py, &config, &sql)
 }

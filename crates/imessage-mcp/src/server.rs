@@ -1,4 +1,3 @@
-use std::path::PathBuf;
 use std::sync::Arc;
 
 use imessage_core::{models::EtlConfig, query::QueryEngine};

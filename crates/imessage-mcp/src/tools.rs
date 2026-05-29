@@ -1,6 +1,6 @@
 use datafusion::arrow::util::display::{ArrayFormatter, FormatOptions};
 use imessage_core::{
-    query::{built_in, QueryEngine},
+    query::built_in,
     storage::{metadata::EtlMetadata, parquet::messages_path},
 };
 use serde_json::{json, Value};

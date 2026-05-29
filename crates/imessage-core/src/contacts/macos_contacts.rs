@@ -92,21 +92,21 @@ pub fn fetch() -> Result<HashMap<String, String>> {
 
         let block = block2::StackBlock::new(
             |contact: NonNull<CNContact>, _stop: NonNull<Bool>| {
-                let contact = unsafe { contact.as_ref() };
-                let given = unsafe { contact.givenName().to_string() };
-                let family = unsafe { contact.familyName().to_string() };
+                let contact = contact.as_ref();
+                let given = contact.givenName().to_string();
+                let family = contact.familyName().to_string();
                 let name = format!("{given} {family}").trim().to_string();
                 if name.is_empty() {
                     return;
                 }
-                let phones = unsafe { contact.phoneNumbers() };
+                let phones = contact.phoneNumbers();
                 for labeled in phones.iter() {
-                    let raw = unsafe { labeled.value().stringValue().to_string() };
+                    let raw = labeled.value().stringValue().to_string();
                     entries.borrow_mut().push((normalize_phone(&raw), name.clone()));
                 }
-                let emails = unsafe { contact.emailAddresses() };
+                let emails = contact.emailAddresses();
                 for labeled in emails.iter() {
-                    let email = unsafe { labeled.value().to_string().to_lowercase() };
+                    let email = labeled.value().to_string().to_lowercase();
                     entries.borrow_mut().push((email, name.clone()));
                 }
             },
