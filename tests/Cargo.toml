@@ -1,0 +1,12 @@
+[package]
+name = "imessage-tests"
+version.workspace = true
+edition.workspace = true
+
+[[test]]
+name = "etl_test"
+path = "integration/etl_test.rs"
+
+[dependencies]
+imessage-core = { path = "../crates/imessage-core" }
+arrow = { version = "58", features = ["chrono-tz"] }

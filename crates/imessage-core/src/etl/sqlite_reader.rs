@@ -49,9 +49,21 @@ pub fn read_since(db_path: &Path, since_rowid: i64) -> Result<RawData> {
     }
 
     let conn = Connection::open_with_flags(db_path, OpenFlags::SQLITE_OPEN_READ_ONLY)
-        .map_err(|e| Error::DbAccessDenied {
-            path: db_path.display().to_string(),
-            reason: e.to_string(),
+        .map_err(|e| {
+            let reason = e.to_string();
+            // SQLite returns "unable to open database file" when macOS denies access.
+            // Guide the user to Full Disk Access rather than showing a raw SQLite error.
+            if reason.contains("unable to open") || reason.contains("permission denied") {
+                Error::DbAccessDenied {
+                    path: db_path.display().to_string(),
+                    reason: "Permission denied — grant Full Disk Access to your terminal:\n  System Settings → Privacy & Security → Full Disk Access".to_string(),
+                }
+            } else {
+                Error::DbAccessDenied {
+                    path: db_path.display().to_string(),
+                    reason,
+                }
+            }
         })?;
 
     let messages = load_messages(&conn, since_rowid)?;

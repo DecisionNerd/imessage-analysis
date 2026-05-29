@@ -17,6 +17,9 @@ class ImessageAnalysis < Formula
            "--bin", "imessage-mcp"
     bin.install "target/release/imessage-analysis"
     bin.install "target/release/imessage-mcp"
+
+    # Shell completions
+    generate_completions_from_executable(bin/"imessage-analysis", "completions")
   end
 
   test do

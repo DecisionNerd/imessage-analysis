@@ -4,12 +4,14 @@ members = [
     "crates/imessage-cli",
     "crates/imessage-mcp",
     "crates/imessage-python",
+    "tests",
 ]
 # Exclude the Python bindings from default builds — use `maturin develop` instead.
 default-members = [
     "crates/imessage-core",
     "crates/imessage-cli",
     "crates/imessage-mcp",
+    "tests",
 ]
 resolver = "2"
 

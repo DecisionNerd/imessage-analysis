@@ -1,6 +1,8 @@
 mod commands;
 mod output;
 
+use clap_complete::Shell;
+
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
@@ -103,6 +105,11 @@ enum Commands {
         #[arg(long, default_value_t = 50)]
         limit: usize,
     },
+    /// Generate shell completions
+    Completions {
+        /// Shell to generate completions for
+        shell: Shell,
+    },
 }
 
 fn main() {
@@ -141,6 +148,11 @@ fn main() {
         Commands::Seasonality { kind } => commands::analysis::seasonality(&config, &kind, &fmt),
         Commands::ContactStats { contact, limit } => {
             commands::analysis::contact_stats(&config, contact.as_deref(), limit, &fmt)
+        }
+        Commands::Completions { shell } => {
+            use clap::CommandFactory;
+            clap_complete::generate(shell, &mut Cli::command(), "imessage-analysis", &mut std::io::stdout());
+            Ok(())
         }
     };
 
