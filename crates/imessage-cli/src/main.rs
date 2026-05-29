@@ -14,23 +14,23 @@ use std::path::PathBuf;
 )]
 struct Cli {
     /// Path to chat.db [default: ~/Library/Messages/chat.db]
-    #[arg(long, global = true)]
+    #[arg(long, global = true, hide = true)]
     db_path: Option<PathBuf>,
 
     /// Directory for Parquet output [default: ~/.imessage-analysis/]
-    #[arg(long, global = true)]
+    #[arg(long, global = true, hide = true)]
     data_dir: Option<PathBuf>,
 
     /// Path to contacts override TOML
-    #[arg(long, global = true)]
+    #[arg(long, global = true, hide = true)]
     contacts: Option<PathBuf>,
 
     /// Disable automatic macOS Contacts.app lookup
-    #[arg(long, global = true, default_value_t = false)]
+    #[arg(long, global = true, hide = true, default_value_t = false)]
     no_auto_contacts: bool,
 
     /// Output format: table, json, csv
-    #[arg(long, global = true, default_value = "table")]
+    #[arg(long, global = true, hide = true, default_value = "table")]
     format: String,
 
     #[command(subcommand)]
