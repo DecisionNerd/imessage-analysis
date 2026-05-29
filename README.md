@@ -34,13 +34,14 @@ Query and analyse your entire Mac iMessage history — from the terminal, an AI 
 brew tap DecisionNerd/tap
 brew install imessage-analysis
 
-# Build your dataset
-imessage-analysis etl
+# Build (first time) or update (subsequent runs)
+imessage-analysis sync
 
 # Analyse
 imessage-analysis top-contacts --limit 10
 imessage-analysis time-series --window 28
 imessage-analysis reactions
+imessage-analysis search-contacts alice        # find the right name to use in other commands
 imessage-analysis query "SELECT year, COUNT(*) AS n FROM messages GROUP BY year ORDER BY year"
 ```
 

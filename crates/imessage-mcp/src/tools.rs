@@ -1,7 +1,7 @@
 use datafusion::arrow::util::display::{ArrayFormatter, FormatOptions};
 use imessage_core::{
-    etl::incremental,
     query::{built_in, QueryEngine},
+    storage::metadata::EtlMetadata,
 };
 use serde_json::{json, Value};
 
@@ -10,18 +10,8 @@ use crate::server::ServerState;
 pub fn list() -> Value {
     json!([
         {
-            "name": "run_etl",
-            "description": "Run full ETL pipeline — extract from chat.db and write Parquet dataset.",
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "db_path": { "type": "string", "description": "Path to chat.db (optional, uses default)" }
-                }
-            }
-        },
-        {
-            "name": "refresh",
-            "description": "Incremental update — only fetch messages since the last ETL run.",
+            "name": "sync",
+            "description": "Sync message history — builds the dataset on first run, updates incrementally after that. Always call this before querying if you are not sure the data is fresh.",
             "inputSchema": { "type": "object", "properties": {} }
         },
         {
@@ -110,6 +100,18 @@ pub fn list() -> Value {
             }
         },
         {
+            "name": "search_contacts",
+            "description": "Search for contacts by name, phone number, or email. Use this to find the exact name string to pass to other tools.",
+            "inputSchema": {
+                "type": "object",
+                "required": ["query"],
+                "properties": {
+                    "query": { "type": "string", "description": "Substring to search for (case-insensitive)" },
+                    "limit": { "type": "integer", "description": "Max results (default 20)" }
+                }
+            }
+        },
+        {
             "name": "schema",
             "description": "Return the dataset schema (column names and types).",
             "inputSchema": { "type": "object", "properties": {} }
@@ -119,16 +121,20 @@ pub fn list() -> Value {
 
 pub async fn call(state: &ServerState, name: &str, args: Value) -> Result<Value, String> {
     match name {
-        "run_etl" => {
-            imessage_core::run_etl(&state.config).map_err(|e| e.to_string())?;
+        "sync" => {
+            let meta = EtlMetadata::load(&state.config.data_dir).map_err(|e| e.to_string())?;
+            let summary = match meta {
+                None => imessage_core::run_etl(&state.config).map_err(|e| e.to_string())?,
+                Some(m) => imessage_core::run_etl_since(&state.config, m.last_message_rowid)
+                    .map_err(|e| e.to_string())?,
+            };
             state.invalidate_engine().await;
-            Ok(json!({ "content": [{ "type": "text", "text": "ETL complete." }] }))
-        }
-
-        "refresh" => {
-            let summary = incremental::refresh(&state.config).map_err(|e| e.to_string())?;
-            state.invalidate_engine().await;
-            Ok(json!({ "content": [{ "type": "text", "text": format!("{} new messages added.", summary.rows_written) }] }))
+            let msg = if summary.rows_written == 0 {
+                "Already up to date.".to_string()
+            } else {
+                format!("{} messages synced.", summary.rows_written)
+            };
+            Ok(json!({ "content": [{ "type": "text", "text": msg }] }))
         }
 
         "schema" => {
@@ -184,6 +190,10 @@ fn build_sql(name: &str, args: &Value) -> Result<String, String> {
             _ => built_in::seasonality_dow().to_string(),
         },
         "contact_stats" => built_in::contact_stats(str_arg("contact").as_deref().map(str::to_string).as_deref()),
+        "search_contacts" => {
+            let q = str_arg("query").ok_or("missing `query` argument")?;
+            built_in::search_contacts(&q, usize_arg("limit", 20))
+        }
         _ => return Err(format!("Unknown tool: {name}")),
     })
 }

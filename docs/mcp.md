@@ -8,13 +8,13 @@
 npx skills add DecisionNerd/imessage-analysis
 ```
 
-Then run `/imessage-analysis` inside Claude Code. The skill installs the binary, guides you through granting Full Disk Access, registers the MCP server, and runs the initial ETL — all in one session.
+Then sync — all in one session.
 
 ## Setup with Claude Desktop
 
 1. Run the ETL at least once so a dataset exists:
    ```sh
-   imessage-analysis etl
+   imessage-analysis sync
    ```
 
 2. Edit `~/Library/Application Support/Claude/claude_desktop_config.json` and add the server:
@@ -41,9 +41,9 @@ You can now ask Claude things like:
 
 | Tool | Description |
 |---|---|
-| `run_etl` | Run the full ETL pipeline (chat.db → Parquet) |
-| `refresh` | Incremental update — only new messages since last run |
+| `sync` | Build dataset on first run, update incrementally after that |
 | `query` | Execute arbitrary SQL against the `messages` table |
+| `search_contacts` | Find contacts by name, phone, or email |
 | `top_contacts` | Most-messaged contacts |
 | `time_series` | Daily message counts with rolling average |
 | `reactions` | Reaction type breakdown |
@@ -63,6 +63,13 @@ All parameters are optional unless noted.
 |---|---|---|
 | `sql` *(required)* | string | SQL to execute. Table name is `messages`. |
 | `limit` | integer | Max rows to return (default 100) |
+
+### `search_contacts`
+
+| Parameter | Type | Description |
+|---|---|---|
+| `query` *(required)* | string | Substring to search for in name, phone, or email (case-insensitive) |
+| `limit` | integer | Max results (default 20) |
 
 ### `top_contacts`
 
@@ -103,6 +110,6 @@ All parameters are optional unless noted.
 
 ## Keeping data fresh
 
-The server holds the dataset in memory for the lifetime of the process. After calling `run_etl` or `refresh`, the in-memory index is automatically re-initialised — you do not need to restart the server.
+The server holds the dataset in memory for the lifetime of the process. After calling `sync`, the in-memory index is automatically re-initialised — you do not need to restart the server.
 
-For day-to-day use, prefer `refresh` over `run_etl`. It only processes messages since the last run and completes in milliseconds.
+`sync` handles everything automatically: full build on first run, incremental update on subsequent calls.

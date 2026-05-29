@@ -19,17 +19,19 @@ from imessage_analysis._lib import (
     links,
     query,
     reactions,
-    refresh,
     run_etl,
+    search_contacts,
     seasonality,
+    sync,
     time_series,
     top_contacts,
 )
 
 __all__ = [
+    "sync",
     "run_etl",
-    "refresh",
     "query",
+    "search_contacts",
     "top_contacts",
     "time_series",
     "reactions",

@@ -1,7 +1,6 @@
 pub mod analysis;
-pub mod etl;
 pub mod query;
-pub mod refresh;
+pub mod sync;
 
 use imessage_core::models::EtlConfig;
 use std::path::PathBuf;

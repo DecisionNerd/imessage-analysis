@@ -59,7 +59,7 @@ This registers `imessage-mcp` as a stdio MCP server named `imessage-analysis` in
 ### 4 — Build the dataset
 
 ```sh
-imessage-analysis etl
+imessage-analysis sync
 ```
 
 This reads `chat.db` and writes `~/.imessage-analysis/messages.parquet`. It takes a few seconds for a typical chat history.

@@ -51,6 +51,26 @@ fn run_sql<'py>(py: Python<'py>, config: &EtlConfig, sql: &str) -> PyResult<Boun
         .into_pyarrow(py)
 }
 
+/// Sync message history — full build on first run, incremental update after that.
+#[pyfunction]
+#[pyo3(signature = (db_path=None, data_dir=None, contacts_config=None, auto_contacts=true))]
+fn sync(
+    db_path: Option<String>,
+    data_dir: Option<String>,
+    contacts_config: Option<String>,
+    auto_contacts: bool,
+) -> PyResult<()> {
+    use imessage_core::storage::metadata::EtlMetadata;
+    let config = make_config(db_path, data_dir, contacts_config, auto_contacts);
+    let meta = EtlMetadata::load(&config.data_dir).map_err(to_py_err)?;
+    match meta {
+        None => imessage_core::run_etl(&config).map_err(to_py_err).map(|_| ()),
+        Some(m) => imessage_core::run_etl_since(&config, m.last_message_rowid)
+            .map_err(to_py_err)
+            .map(|_| ()),
+    }
+}
+
 /// Run the full ETL pipeline — read chat.db, transform, write Parquet.
 #[pyfunction]
 #[pyo3(signature = (db_path=None, data_dir=None, contacts_config=None, auto_contacts=true))]
@@ -172,6 +192,19 @@ fn seasonality<'py>(
     run_sql(py, &config, &sql)
 }
 
+/// Search contacts by name, phone, or email. Returns a pyarrow.Table.
+#[pyfunction]
+#[pyo3(signature = (query, limit=20, data_dir=None))]
+fn search_contacts<'py>(
+    py: Python<'py>,
+    query: String,
+    limit: usize,
+    data_dir: Option<String>,
+) -> PyResult<Bound<'py, PyAny>> {
+    let config = make_config(None, data_dir, None, false);
+    run_sql(py, &config, &built_in::search_contacts(&query, limit))
+}
+
 /// Per-contact statistics. Returns a pyarrow.Table.
 #[pyfunction]
 #[pyo3(signature = (contact=None, data_dir=None))]
@@ -186,6 +219,7 @@ fn contact_stats<'py>(
 
 #[pymodule]
 fn _lib(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(sync, m)?)?;
     m.add_function(wrap_pyfunction!(run_etl, m)?)?;
     m.add_function(wrap_pyfunction!(refresh, m)?)?;
     m.add_function(wrap_pyfunction!(query, m)?)?;
@@ -195,6 +229,7 @@ fn _lib(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(effects, m)?)?;
     m.add_function(wrap_pyfunction!(links, m)?)?;
     m.add_function(wrap_pyfunction!(seasonality, m)?)?;
+    m.add_function(wrap_pyfunction!(search_contacts, m)?)?;
     m.add_function(wrap_pyfunction!(contact_stats, m)?)?;
     Ok(())
 }

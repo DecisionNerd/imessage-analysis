@@ -39,14 +39,19 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Run full ETL pipeline (chat.db → Parquet)
-    Etl,
-    /// Incremental update — only new messages since last run
-    Refresh,
+    /// Sync your message history — builds the dataset on first run, updates incrementally after that
+    Sync,
     /// Execute arbitrary SQL against the dataset
     Query {
         sql: String,
         #[arg(long, default_value_t = 50)]
+        limit: usize,
+    },
+    /// Search for contacts by name or phone/email — use results as input to other commands
+    SearchContacts {
+        /// Name, phone number, or email to search for (case-insensitive substring match)
+        query: String,
+        #[arg(long, default_value_t = 20)]
         limit: usize,
     },
     /// Most-messaged contacts
@@ -107,7 +112,6 @@ enum Commands {
     },
     /// Generate shell completions
     Completions {
-        /// Shell to generate completions for
         shell: Shell,
     },
 }
@@ -131,9 +135,11 @@ fn main() {
     );
 
     let result = match cli.command {
-        Commands::Etl => commands::etl::run(&config),
-        Commands::Refresh => commands::refresh::run(&config),
+        Commands::Sync => commands::sync::run(&config),
         Commands::Query { sql, limit } => commands::query::run(&config, &sql, limit, &fmt),
+        Commands::SearchContacts { query, limit } => {
+            commands::analysis::search_contacts(&config, &query, limit, &fmt)
+        }
         Commands::TopContacts { limit, year, direct_only } => {
             commands::analysis::top_contacts(&config, limit, year, direct_only, &fmt)
         }

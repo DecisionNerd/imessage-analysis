@@ -57,4 +57,4 @@ macOS requires **Full Disk Access** for any process that reads `~/Library/Messag
 2. Click **+** and add your terminal application (Terminal, iTerm2, etc.)
 3. Re-launch the terminal
 
-Without this, `imessage-analysis etl` will fail with a permissions error.
+Without this, `imessage-analysis sync` will fail with a permissions error.

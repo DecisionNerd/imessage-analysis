@@ -63,3 +63,7 @@ pub fn seasonality(config: &EtlConfig, kind: &str, fmt: &Format) -> Result<()> {
 pub fn contact_stats(config: &EtlConfig, contact: Option<&str>, limit: usize, fmt: &Format) -> Result<()> {
     run_query!(config, built_in::contact_stats(contact), limit, fmt)
 }
+
+pub fn search_contacts(config: &EtlConfig, query: &str, limit: usize, fmt: &Format) -> Result<()> {
+    run_query!(config, built_in::search_contacts(query, limit), limit, fmt)
+}

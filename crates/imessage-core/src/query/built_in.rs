@@ -131,6 +131,24 @@ pub fn seasonality_month() -> &'static str {
      ORDER BY month"
 }
 
+/// Substring search across name and contact_info columns.
+pub fn search_contacts(query: &str, limit: usize) -> String {
+    let escaped = query.replace('\'', "''").to_lowercase();
+    format!(
+        "SELECT
+             name,
+             contact_info,
+             COUNT(*) AS message_count
+         FROM messages
+         WHERE (lower(coalesce(name, '')) LIKE '%{escaped}%'
+             OR lower(coalesce(contact_info, '')) LIKE '%{escaped}%')
+           AND (name IS NOT NULL OR contact_info IS NOT NULL)
+         GROUP BY name, contact_info
+         ORDER BY message_count DESC
+         LIMIT {limit}"
+    )
+}
+
 pub fn contact_stats(contact: Option<&str>) -> String {
     let where_clause = match contact {
         Some(c) => {

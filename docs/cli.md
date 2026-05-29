@@ -14,28 +14,18 @@ These flags apply to every subcommand:
 
 ---
 
-## ETL commands
+## Data commands
 
-### `etl`
+### `sync`
 
-Run the full extract-transform-load pipeline. Reads `chat.db`, applies all transforms, and writes `messages.parquet` to `--data-dir`.
-
-```sh
-imessage-analysis etl
-imessage-analysis etl --db-path /Volumes/Backup/chat.db --data-dir ~/my-data/
-```
-
-On first run this takes a few seconds for a typical chat history (300K–500K messages). Subsequent runs should use `refresh` instead.
-
-### `refresh`
-
-Incremental update — only processes messages with a higher ROWID than the last ETL run. Much faster than a full `etl` for day-to-day use.
+Build or update your message dataset. On first run, extracts everything from `chat.db`. On subsequent runs, only processes new messages since the last sync.
 
 ```sh
-imessage-analysis refresh
+imessage-analysis sync
+imessage-analysis sync --db-path /Volumes/Backup/chat.db --data-dir ~/my-data/
 ```
 
-If no metadata exists (i.e. `etl` has never been run), `refresh` performs a full ETL automatically.
+This is the only command you need to run before querying. It handles both initial setup and incremental updates automatically.
 
 ---
 
@@ -52,6 +42,24 @@ imessage-analysis query "SELECT * FROM messages WHERE reaction != 'no-reaction'"
 ```
 
 The table is named `messages`. See [data model](data-model.md) for the full column list.
+
+---
+
+## Contact search
+
+### `search-contacts`
+
+Find contacts by name, phone number, or email. Use this to discover the exact name string to pass to other commands.
+
+```sh
+imessage-analysis search-contacts alice
+imessage-analysis search-contacts +1415
+imessage-analysis search-contacts gmail.com
+```
+
+| Flag | Default | Description |
+|---|---|---|
+| `--limit <N>` | 20 | Max results |
 
 ---
 
