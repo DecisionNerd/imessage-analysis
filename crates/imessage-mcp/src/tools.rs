@@ -243,12 +243,11 @@ fn build_sql(name: &str, args: &Value) -> Result<String, String> {
             .unwrap_or(default)
     };
 
-    let direction: Option<String> = match (bool_arg("sent"), bool_arg("received")) {
-        (true, false) => Some("is_from_me = 1".to_string()),
-        (false, true) => Some("is_from_me = 0".to_string()),
+    let dir: Option<built_in::Direction> = match (bool_arg("sent"), bool_arg("received")) {
+        (true, false) => Some(built_in::Direction::Sent),
+        (false, true) => Some(built_in::Direction::Received),
         _ => None,
     };
-    let dir = direction.as_deref();
 
     // Expand --year shorthand for time_series
     let ts_start: Option<String> = int_arg("year")

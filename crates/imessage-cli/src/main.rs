@@ -4,6 +4,7 @@ mod output;
 use clap_complete::Shell;
 
 use clap::{Parser, Subcommand};
+use imessage_core::query::built_in;
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -151,10 +152,10 @@ enum Commands {
     Completions { shell: Shell },
 }
 
-fn sent_received_filter(sent: bool, received: bool) -> Option<&'static str> {
+fn sent_received_filter(sent: bool, received: bool) -> Option<built_in::Direction> {
     match (sent, received) {
-        (true, false) => Some("is_from_me = 1"),
-        (false, true) => Some("is_from_me = 0"),
+        (true, false) => Some(built_in::Direction::Sent),
+        (false, true) => Some(built_in::Direction::Received),
         _ => None,
     }
 }

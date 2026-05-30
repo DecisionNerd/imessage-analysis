@@ -1,9 +1,24 @@
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Direction {
+    Sent,
+    Received,
+}
+
+impl Direction {
+    fn as_sql(self) -> &'static str {
+        match self {
+            Direction::Sent => "is_from_me = 1",
+            Direction::Received => "is_from_me = 0",
+        }
+    }
+}
+
 /// Named analysis queries. Each returns a SQL string ready for execution.
 pub fn top_contacts(
     limit: usize,
     year: Option<i32>,
     direct_only: bool,
-    direction: Option<&str>,
+    direction: Option<Direction>,
 ) -> String {
     let mut filters = vec!["name IS NOT NULL".to_string()];
     if direct_only {
@@ -13,7 +28,7 @@ pub fn top_contacts(
         filters.push(format!("year = {y}"));
     }
     if let Some(d) = direction {
-        filters.push(d.to_string());
+        filters.push(d.as_sql().to_string());
     }
     let where_clause = format!("WHERE {}", filters.join(" AND "));
     format!(
@@ -31,7 +46,7 @@ pub fn time_series(
     window: usize,
     start: Option<&str>,
     end: Option<&str>,
-    direction: Option<&str>,
+    direction: Option<Direction>,
 ) -> String {
     let mut filters: Vec<String> = vec!["date IS NOT NULL".to_string()];
     if let Some(c) = contact {
@@ -47,7 +62,7 @@ pub fn time_series(
         filters.push(format!("date <= '{escaped}'"));
     }
     if let Some(d) = direction {
-        filters.push(d.to_string());
+        filters.push(d.as_sql().to_string());
     }
     let where_clause = format!("WHERE {}", filters.join(" AND "));
     format!(
@@ -66,7 +81,7 @@ pub fn time_series(
     )
 }
 
-pub fn reactions(contact: Option<&str>, year: Option<i32>, direction: Option<&str>) -> String {
+pub fn reactions(contact: Option<&str>, year: Option<i32>, direction: Option<Direction>) -> String {
     let mut filters = vec!["reaction != 'no-reaction'".to_string()];
     if let Some(c) = contact {
         let escaped = c.replace('\'', "''");
@@ -76,7 +91,7 @@ pub fn reactions(contact: Option<&str>, year: Option<i32>, direction: Option<&st
         filters.push(format!("year = {y}"));
     }
     if let Some(d) = direction {
-        filters.push(d.to_string());
+        filters.push(d.as_sql().to_string());
     }
     let where_clause = format!("WHERE {}", filters.join(" AND "));
     format!(
@@ -114,8 +129,10 @@ pub fn links(limit: usize) -> String {
     )
 }
 
-pub fn seasonality_dow(direction: Option<&str>) -> String {
-    let extra = direction.map(|d| format!(" AND {d}")).unwrap_or_default();
+pub fn seasonality_dow(direction: Option<Direction>) -> String {
+    let extra = direction
+        .map(|d| format!(" AND {}", d.as_sql()))
+        .unwrap_or_default();
     format!(
         "SELECT
              EXTRACT(DOW FROM CAST(timestamp AS TIMESTAMP)) AS dow_number,
@@ -136,8 +153,10 @@ pub fn seasonality_dow(direction: Option<&str>) -> String {
     )
 }
 
-pub fn seasonality_month(direction: Option<&str>) -> String {
-    let extra = direction.map(|d| format!(" AND {d}")).unwrap_or_default();
+pub fn seasonality_month(direction: Option<Direction>) -> String {
+    let extra = direction
+        .map(|d| format!(" AND {}", d.as_sql()))
+        .unwrap_or_default();
     format!(
         "SELECT
              month,

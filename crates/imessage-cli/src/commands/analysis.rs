@@ -24,7 +24,7 @@ pub fn top_contacts(
     limit: usize,
     year: Option<i32>,
     direct_only: bool,
-    direction: Option<&str>,
+    direction: Option<built_in::Direction>,
     fmt: &Format,
 ) -> Result<()> {
     run_query!(
@@ -42,7 +42,7 @@ pub fn time_series(
     window: usize,
     start: Option<&str>,
     end: Option<&str>,
-    direction: Option<&str>,
+    direction: Option<built_in::Direction>,
     limit: usize,
     fmt: &Format,
 ) -> Result<()> {
@@ -58,7 +58,7 @@ pub fn reactions(
     config: &EtlConfig,
     contact: Option<&str>,
     year: Option<i32>,
-    direction: Option<&str>,
+    direction: Option<built_in::Direction>,
     fmt: &Format,
 ) -> Result<()> {
     run_query!(
@@ -80,7 +80,7 @@ pub fn links(config: &EtlConfig, limit: usize, fmt: &Format) -> Result<()> {
 pub fn seasonality(
     config: &EtlConfig,
     kind: &str,
-    direction: Option<&str>,
+    direction: Option<built_in::Direction>,
     fmt: &Format,
 ) -> Result<()> {
     let sql = match kind {

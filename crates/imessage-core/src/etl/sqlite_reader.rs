@@ -42,6 +42,14 @@ pub fn read_all(db_path: &Path) -> Result<RawData> {
 }
 
 pub fn read_since(db_path: &Path, since_rowid: i64) -> Result<RawData> {
+    read_since_with_progress(db_path, since_rowid, None)
+}
+
+pub fn read_since_with_progress(
+    db_path: &Path,
+    since_rowid: i64,
+    progress: Option<&dyn Fn(usize)>,
+) -> Result<RawData> {
     if !db_path.exists() {
         return Err(Error::DbNotFound {
             path: db_path.display().to_string(),
@@ -66,7 +74,7 @@ pub fn read_since(db_path: &Path, since_rowid: i64) -> Result<RawData> {
             }
         })?;
 
-    let messages = load_messages(&conn, since_rowid)?;
+    let messages = load_messages(&conn, since_rowid, progress)?;
     let chat_members = load_chat_members(&conn)?;
     let max_message_rowid = messages
         .iter()
@@ -81,7 +89,11 @@ pub fn read_since(db_path: &Path, since_rowid: i64) -> Result<RawData> {
     })
 }
 
-fn load_messages(conn: &Connection, since_rowid: i64) -> Result<Vec<MessageRow>> {
+fn load_messages(
+    conn: &Connection,
+    since_rowid: i64,
+    progress: Option<&dyn Fn(usize)>,
+) -> Result<Vec<MessageRow>> {
     let sql = "
         SELECT
             m.ROWID                         AS message_id,
@@ -127,9 +139,15 @@ fn load_messages(conn: &Connection, since_rowid: i64) -> Result<Vec<MessageRow>>
         })
     })?;
 
+    const PROGRESS_INTERVAL: usize = 10_000;
     let mut messages = Vec::new();
     for row in rows {
         messages.push(row?);
+        if let Some(cb) = progress {
+            if messages.len() % PROGRESS_INTERVAL == 0 {
+                cb(messages.len());
+            }
+        }
     }
     Ok(messages)
 }

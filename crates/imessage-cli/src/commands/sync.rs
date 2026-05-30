@@ -21,7 +21,7 @@ pub fn run(config: &EtlConfig, force: bool, quiet: bool) -> Result<()> {
 
     if is_first_run {
         if let Some(s) = &spinner {
-            s.set_message("Building message history…");
+            s.set_message("Building message history\u{2026}");
         }
     } else if let Some(ref m) = meta {
         if let Some(s) = &spinner {
@@ -33,7 +33,15 @@ pub fn run(config: &EtlConfig, force: bool, quiet: bool) -> Result<()> {
     }
 
     let summary = if is_first_run {
-        match imessage_core::run_etl(config) {
+        let spinner_ref = spinner.as_ref();
+        match imessage_core::run_etl_with_progress(config, move |count| {
+            if let Some(s) = spinner_ref {
+                s.set_message(format!(
+                    "Building message history\u{2026} {:>9} messages read",
+                    format_count(count)
+                ));
+            }
+        }) {
             Ok(s) => s,
             Err(e) => {
                 if let Some(s) = &spinner {
@@ -83,4 +91,17 @@ pub fn run(config: &EtlConfig, force: bool, quiet: bool) -> Result<()> {
     }
 
     Ok(())
+}
+
+/// Format a row count with thousands separators, e.g. 50000 -> "50,000".
+fn format_count(n: usize) -> String {
+    let s = n.to_string();
+    let mut out = String::with_capacity(s.len() + s.len() / 3);
+    for (i, ch) in s.chars().rev().enumerate() {
+        if i > 0 && i % 3 == 0 {
+            out.push(',');
+        }
+        out.push(ch);
+    }
+    out.chars().rev().collect()
 }

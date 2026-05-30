@@ -11,13 +11,34 @@ use crate::storage::metadata::EtlMetadata as Meta;
 
 /// Run the full ETL pipeline: read chat.db, transform, write Parquet + metadata.
 pub fn run_etl(config: &EtlConfig) -> Result<EtlSummary> {
-    run_etl_since(config, 0)
+    run_etl_with_progress(config, |_| {})
+}
+
+/// Like [`run_etl`] but calls `progress` with the current row count every 10,000 rows
+/// while reading from SQLite, enabling a CLI spinner to show live progress.
+pub fn run_etl_with_progress(
+    config: &EtlConfig,
+    progress: impl Fn(usize) + Send + Sync,
+) -> Result<EtlSummary> {
+    run_etl_since_with_progress(config, 0, progress)
 }
 
 /// Run an incremental ETL from a given ROWID watermark.
 pub fn run_etl_since(config: &EtlConfig, since_rowid: i64) -> Result<EtlSummary> {
+    run_etl_since_with_progress(config, since_rowid, |_| {})
+}
+
+fn run_etl_since_with_progress(
+    config: &EtlConfig,
+    since_rowid: i64,
+    progress: impl Fn(usize) + Send + Sync,
+) -> Result<EtlSummary> {
     tracing::info!(db = %config.db_path.display(), "Loading from SQLite");
-    let raw = etl::sqlite_reader::read_since(&config.db_path, since_rowid)?;
+    let raw = etl::sqlite_reader::read_since_with_progress(
+        &config.db_path,
+        since_rowid,
+        Some(&progress),
+    )?;
 
     tracing::info!(count = raw.messages.len(), "Transforming rows");
     let contacts = contacts::resolve(config.auto_contacts, config.contacts_config.as_deref())?;

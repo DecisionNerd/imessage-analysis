@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 use imessage_core::etl::{sqlite_reader, transforms};
+use imessage_core::query::built_in;
 
 fn fixture_db() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("fixtures/test_chat.db")
@@ -256,4 +257,32 @@ fn timestamp_converted_from_apple_epoch() {
         .downcast_ref::<arrow::array::Int8Array>()
         .unwrap();
     assert_eq!(month_col.value(0), 1); // January
+}
+
+#[test]
+fn search_contacts_escapes_percent() {
+    let sql = built_in::search_contacts("50%", 10);
+    assert!(sql.contains("50\\%"), "percent should be escaped");
+    assert!(sql.contains("ESCAPE"), "ESCAPE clause should be present");
+}
+
+#[test]
+fn search_contacts_escapes_underscore() {
+    let sql = built_in::search_contacts("alice_b", 10);
+    assert!(sql.contains("alice\\_b"), "underscore should be escaped");
+}
+
+#[test]
+fn search_contacts_escapes_backslash() {
+    let sql = built_in::search_contacts("C:\\Users", 10);
+    assert!(
+        sql.contains("c:\\\\users"),
+        "backslash should be double-escaped and lowercased"
+    );
+}
+
+#[test]
+fn search_contacts_plain_query_unaffected() {
+    let sql = built_in::search_contacts("alice", 10);
+    assert!(sql.contains("alice"), "plain query should pass through");
 }
