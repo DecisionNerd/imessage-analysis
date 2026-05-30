@@ -38,7 +38,7 @@ INSERT INTO handle VALUES (2, '+14155550002');   -- Bob
 -- Timestamps stored as nanoseconds since 2001-01-01
 -- 2024-01-15 12:00:00 UTC = Unix 1705320000 → Apple = (1705320000 - 978307200) * 1e9
 --   = 727012800000000000
--- 2024-01-16 09:30:00 UTC = Unix 1705398600 → Apple = 727091400000000000
+-- 2024-01-16 09:50:00 UTC = Unix 1705398600 → Apple = 727091400000000000
 
 -- Chat 1: 1-on-1 with Alice
 -- msg 1: received plain text from Alice

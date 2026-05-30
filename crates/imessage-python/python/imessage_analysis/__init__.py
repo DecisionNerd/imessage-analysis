@@ -8,8 +8,7 @@ Quick start::
 
     import imessage_analysis
 
-    imessage_analysis.run_etl()                      # build the dataset once
-    imessage_analysis.refresh()                      # incremental update
+    imessage_analysis.sync()                         # build or update the dataset
     df = imessage_analysis.top_contacts().to_pandas()
 """
 
@@ -19,6 +18,7 @@ from imessage_analysis._lib import (
     links,
     query,
     reactions,
+    refresh,
     run_etl,
     search_contacts,
     seasonality,
@@ -30,6 +30,7 @@ from imessage_analysis._lib import (
 __all__ = [
     "sync",
     "run_etl",
+    "refresh",
     "query",
     "search_contacts",
     "top_contacts",

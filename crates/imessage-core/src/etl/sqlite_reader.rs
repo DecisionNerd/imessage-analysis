@@ -90,11 +90,15 @@ fn load_messages(conn: &Connection, since_rowid: i64) -> Result<Vec<MessageRow>>
             m.thread_originator_guid,
             m.balloon_bundle_id,
             COALESCE(m.is_audio_message, 0) AS is_audio_message,
-            CAST((m.date / 1000000000 + 978307200) AS INTEGER) AS unix_ts,
+            CAST((CASE WHEN m.date > 1000000000000 THEN m.date / 1000000000 ELSE m.date END + 978307200) AS INTEGER) AS unix_ts,
             cmj.chat_id,
             h.id                            AS contact_info
         FROM message m
-        LEFT JOIN chat_message_join cmj ON m.ROWID = cmj.message_id
+        LEFT JOIN (
+            SELECT message_id, MIN(chat_id) AS chat_id
+            FROM chat_message_join
+            GROUP BY message_id
+        ) cmj ON m.ROWID = cmj.message_id
         LEFT JOIN handle h ON m.handle_id = h.ROWID
         WHERE m.ROWID > ?1
         ORDER BY m.ROWID

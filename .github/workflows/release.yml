@@ -73,6 +73,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           BRANCH="update-imessage-analysis-${VERSION_BARE}"
+          git push origin --delete "$BRANCH" 2>/dev/null || true
           git checkout -b "$BRANCH"
 
           # Update url and sha256 in the formula
