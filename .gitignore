@@ -22,3 +22,4 @@ dist/
 
 # Skills — local install state, not source of truth (.agents/skills/ is)
 skills-lock.json
+.claude/worktrees/
