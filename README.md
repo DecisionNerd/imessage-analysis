@@ -7,18 +7,17 @@
 [![Homebrew](https://img.shields.io/badge/homebrew-DecisionNerd%2Ftap-orange)](https://github.com/DecisionNerd/homebrew-tap)
 [![macOS](https://img.shields.io/badge/platform-macOS-lightgrey)](https://www.apple.com/macos/)
 
-Query and analyse your entire Mac iMessage history — from the terminal, an AI agent, or a Python notebook. Extracts Apple's SQLite database into Parquet, then runs fast columnar queries via Apache DataFusion. Built in Rust.
+Ask questions about your entire iMessage history — from an AI agent, the terminal, or a Python notebook. Works on Mac.
 
 ---
 
-## Features
+## What it does
 
-- **CLI** — ETL, ad-hoc SQL, and built-in analyses (top contacts, reactions, time series, seasonality)
-- **MCP server** — expose your message data as tools for Claude and other AI agents
-- **Python package** — returns `pyarrow.Table` for seamless pandas / notebook integration
-- **Incremental refresh** — only processes new messages since the last run
-- **Contact resolution** — auto-resolves names from macOS Contacts.app, with TOML overrides
-- **Fast** — handles 500K+ messages in seconds via vectorised columnar execution
+- **Ask your AI** — connect to Claude, Codex, Cursor, or ChatGPT and ask things like *"Who do I text most?"* or *"What did Alice and I talk about last month?"*
+- **Search and query** — run any question against your messages from the terminal
+- **Python notebooks** — load your message data into pandas for custom analysis
+- **Always current** — syncs only new messages each run, so it stays fast
+- **Real names** — reads your Contacts to show names instead of phone numbers
 
 ---
 
@@ -26,37 +25,37 @@ Query and analyse your entire Mac iMessage history — from the terminal, an AI 
 
 ### With Claude Code, Codex, or Cursor
 
-**1.** Add the skills:
+**1.** Install the skills package:
 
 ```sh
 npx skills add DecisionNerd/imessage-analysis
 ```
 
-**2.** Run the install skill:
+**2.** Run the setup command inside your AI tool:
 
 ```
 /imessage-analysis-install
 ```
 
-Checks for the binary, registers the MCP server with the right command for your agent, and walks you through the first sync.
+This installs the binary, connects it to your AI tool, and walks you through the first sync — including a note about using Apple Terminal the first time so macOS can ask for Contacts permission.
 
-**3.** Ask anything about your messages:
+**3.** Ask anything:
 
 > *"Who have I texted most this year?"*
 > *"Give me a deep dive on Alice"*
 > *"Who's been waiting on a reply from me?"*
 
-### With any other client (Claude Desktop, ChatGPT, Windsurf…)
+### With Claude Desktop, ChatGPT, or any other AI tool
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/DecisionNerd/imessage-analysis/main/scripts/install.sh | bash
 ```
 
-Auto-detects and registers with Claude Desktop, Cursor, Claude Code, and Codex. See [MCP setup](docs/mcp.md) for manual config.
+Detects and connects to Claude Desktop, Cursor, Claude Code, and Codex automatically. See [MCP setup](docs/mcp.md) for manual steps.
 
-### With the CLI
+### From the terminal only
 
-**1.** Grant **Terminal Full Disk Access**:
+**1.** Give Terminal permission to read your messages:
 
 > System Settings → Privacy & Security → Full Disk Access → enable Terminal
 
@@ -67,13 +66,13 @@ brew tap DecisionNerd/tap
 brew install imessage-analysis
 ```
 
-**3.** First sync from Apple Terminal.app (see note above):
+**3.** Run your first sync from **Apple Terminal.app** (not iTerm2 or other terminals — macOS needs this to ask for Contacts permission the first time):
 
 ```sh
 imessage-analysis sync
 ```
 
-**4.** Explore:
+**4.** Start exploring:
 
 ```sh
 imessage-analysis status
@@ -113,9 +112,7 @@ df = imessage_analysis.top_contacts().to_pandas()
 df = imessage_analysis.query("SELECT * FROM messages WHERE year = 2024").to_pandas()
 ```
 
-All query functions return `pyarrow.Table`. Call `.to_pandas()` to convert.
-
-> **Contact names:** `imessage_analysis.sync()` picks up new messages but cannot resolve contact names — the Python interpreter doesn't have Contacts access. Run `imessage-analysis sync` from the CLI to keep names up to date.
+> **Note:** `imessage_analysis.sync()` picks up new messages but won't resolve contact names — that requires running `imessage-analysis sync` from the terminal at least once.
 
 ---
 
@@ -126,7 +123,7 @@ All query functions return `pyarrow.Table`. Call `.to_pandas()` to convert.
 | Homebrew | `brew tap DecisionNerd/tap && brew install imessage-analysis` |
 | Cargo | `cargo install --git https://github.com/DecisionNerd/imessage-analysis` |
 | PyPI | `pip install imessage-analysis` |
-| Claude Code | `npx skills add DecisionNerd/imessage-analysis` |
+| Claude Code / Codex / Cursor | `npx skills add DecisionNerd/imessage-analysis` |
 
 Requires macOS. Rust 1.70+ for source builds. Python 3.11+ for the Python package.
 
@@ -138,11 +135,11 @@ Requires macOS. Rust 1.70+ for source builds. Python 3.11+ for the Python packag
 |---|---|
 | [Installation](docs/installation.md) | Full Disk Access, Homebrew, source, Python |
 | [CLI reference](docs/cli.md) | All commands and flags |
-| [MCP server](docs/mcp.md) | Tool list, Claude Desktop setup |
+| [AI agent setup](docs/mcp.md) | Connecting to Claude, Codex, Cursor, ChatGPT |
 | [Python package](docs/python.md) | API reference, notebook examples |
 | [Data model](docs/data-model.md) | All 22 output columns |
 | [Contact resolution](docs/contacts.md) | Contacts.app + TOML overrides |
-| [Architecture](docs/architecture.md) | Crate layout, ETL vs query layers |
+| [Architecture](docs/architecture.md) | How it works under the hood |
 | [Releasing](docs/releasing.md) | Tagging, Homebrew formula update |
 
 ---
@@ -165,7 +162,7 @@ Inspired by the foundational work of [Yorgos Askalidis](https://medium.com/@yask
 - [Accessing your iMessage history on Mac](https://medium.com/@yaskalidis/heres-how-you-can-access-your-entire-imessage-history-on-your-mac-f8878276c6e9)
 - [Fun analysis ideas](https://medium.com/@yaskalidis/fun-things-you-can-learn-about-yourself-and-from-your-messages-5101631a8e20)
 
-This is a separate, ground-up Rust rewrite that extends the concept with a native CLI, MCP server, and Python bindings.
+This is a separate, ground-up Rust rewrite that extends the concept with a native CLI, AI agent integration, and Python bindings.
 
 ---
 
