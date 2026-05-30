@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "imessage-analysis"
-version = "0.1.0"
+version = "0.1.1"
 description = "Extract, query, and analyse your Mac iMessage history"
 readme = "../../README.md"
 requires-python = ">=3.11"
@@ -24,7 +24,7 @@ dependencies = [
 ]
 
 [tool.maturin]
-features = ["pyo3/extension-module"]
+features = ["pyo3/extension-module", "pyo3/abi3-py311"]
 python-source = "python"
 module-name = "imessage_analysis._lib"
 

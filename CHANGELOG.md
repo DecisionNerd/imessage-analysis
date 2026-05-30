@@ -7,6 +7,13 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.1.1] — 2026-05-30
+
+### Fixed
+- Python wheel now uses abi3 stable ABI (`cp311-abi3`), compatible with Python 3.11+ instead of only the specific Python version used to build it
+
+---
+
 ## [0.1.0] — 2026-05-30
 
 First public release. Ground-up Rust rewrite of the original Python analysis notebooks.
