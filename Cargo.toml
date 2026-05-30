@@ -18,7 +18,7 @@ resolver = "2"
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
-authors = ["David Spencer <david@davidspencer.io>"]
+authors = ["David Spencer <1526975+DecisionNerd@users.noreply.github.com>"]
 license = "GPL-3.0-only"
 repository = "https://github.com/DecisionNerd/imessage-analysis"
 
