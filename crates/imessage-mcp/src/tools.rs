@@ -283,9 +283,10 @@ fn build_sql(name: &str, args: &Value) -> Result<String, String> {
             "month" => built_in::seasonality_month(dir),
             _ => built_in::seasonality_dow(dir),
         },
-        "contact_stats" => {
-            built_in::contact_stats(str_arg("contact").as_deref().map(str::to_string).as_deref())
-        }
+        "contact_stats" => built_in::contact_stats(
+            str_arg("contact").as_deref().map(str::to_string).as_deref(),
+            usize_arg("limit", 50),
+        ),
         "search_contacts" => {
             let q = str_arg("query").ok_or("missing `query` argument")?;
             built_in::search_contacts(&q, usize_arg("limit", 20))

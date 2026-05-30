@@ -96,7 +96,7 @@ pub fn contact_stats(
     limit: usize,
     fmt: &Format,
 ) -> Result<()> {
-    run_query!(config, built_in::contact_stats(contact), limit, fmt)
+    run_query!(config, built_in::contact_stats(contact, limit), limit, fmt)
 }
 
 pub fn search_contacts(config: &EtlConfig, query: &str, limit: usize, fmt: &Format) -> Result<()> {

@@ -230,14 +230,19 @@ fn search_contacts<'py>(
 
 /// Per-contact statistics. Returns a pyarrow.Table.
 #[pyfunction]
-#[pyo3(signature = (contact=None, data_dir=None))]
+#[pyo3(signature = (contact=None, limit=50, data_dir=None))]
 fn contact_stats<'py>(
     py: Python<'py>,
     contact: Option<String>,
+    limit: usize,
     data_dir: Option<String>,
 ) -> PyResult<Bound<'py, PyAny>> {
     let config = make_config(None, data_dir, None, false);
-    run_sql(py, &config, &built_in::contact_stats(contact.as_deref()))
+    run_sql(
+        py,
+        &config,
+        &built_in::contact_stats(contact.as_deref(), limit),
+    )
 }
 
 #[pymodule]

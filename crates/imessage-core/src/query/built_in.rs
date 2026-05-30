@@ -191,7 +191,7 @@ pub fn search_contacts(query: &str, limit: usize) -> String {
     )
 }
 
-pub fn contact_stats(contact: Option<&str>) -> String {
+pub fn contact_stats(contact: Option<&str>, limit: usize) -> String {
     let where_clause = match contact {
         Some(c) => {
             let escaped = c.replace('\'', "''");
@@ -208,11 +208,13 @@ pub fn contact_stats(contact: Option<&str>) -> String {
              COUNT(DISTINCT CAST(date AS VARCHAR)) AS active_days,
              ROUND(CAST(COUNT(*) AS DOUBLE) /
                  NULLIF(CAST(
-                     DATEDIFF('day', CAST(MIN(CAST(date AS VARCHAR)) AS DATE), CAST(MAX(CAST(date AS VARCHAR)) AS DATE)) + 1
+                     CAST(CAST(MAX(CAST(date AS VARCHAR)) AS DATE) AS BIGINT) -
+                     CAST(CAST(MIN(CAST(date AS VARCHAR)) AS DATE) AS BIGINT) + 1
                  AS DOUBLE), 0), 2) AS avg_per_day
          FROM messages
          {where_clause}
          GROUP BY name
-         ORDER BY total_messages DESC"
+         ORDER BY total_messages DESC
+         LIMIT {limit}"
     )
 }

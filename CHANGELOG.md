@@ -7,6 +7,14 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.1.2] — 2026-05-30
+
+### Fixed
+- `contact_stats()` now accepts a `limit` parameter (previously missing from Python binding)
+- `contact_stats()` date span calculation now works across all DataFusion versions — replaced `DATEDIFF()` with portable epoch integer arithmetic
+
+---
+
 ## [0.1.1] — 2026-05-30
 
 ### Fixed
