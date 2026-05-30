@@ -52,7 +52,7 @@ jobs:
         run: |
           gh release create "$VERSION" \
             --title "$VERSION" \
-            --notes "See [CHANGELOG](https://github.com/DecisionNerd/imessage-analysis/blob/main/CHANGELOG.md) for details." \
+            --notes-file CHANGELOG.md \
             "$TARBALL" \
             "target/release/imessage-analysis" \
             "target/release/imessage-mcp"
