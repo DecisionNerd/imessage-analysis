@@ -45,7 +45,8 @@ else
   if command -v imessage-analysis &>/dev/null; then
     ok "imessage-analysis already installed at $(which imessage-analysis)"
     IMESSAGE_BIN="$(which imessage-analysis)"
-    IMESSAGE_MCP_BIN="$(which imessage-mcp 2>/dev/null || echo "$BIN_DIR/imessage-mcp")"
+    _mcp="$(which imessage-mcp 2>/dev/null || true)"
+    IMESSAGE_MCP_BIN="${_mcp:-$BIN_DIR/imessage-mcp}"
   else
     echo "  Homebrew not found — building from source (requires Rust)…"
     command -v cargo &>/dev/null || err "Rust/cargo not found. Install from https://rustup.rs or install Homebrew first."
@@ -169,9 +170,16 @@ fi
 # ── 5. first sync ──────────────────────────────────────────────────────────────
 step "Checking dataset…"
 
-if imessage-analysis status 2>/dev/null | grep -q "Messages:"; then
+# Warn if BIN_DIR is not on PATH (source installs only)
+if [[ ":$PATH:" != *":$BIN_DIR:"* ]] && ! command -v imessage-analysis &>/dev/null; then
+  warn "$BIN_DIR is not on your PATH. Add it to your shell profile:"
+  echo "  export PATH=\"\$PATH:$BIN_DIR\""
+  echo ""
+fi
+
+if "$IMESSAGE_BIN" status 2>/dev/null | grep -q "Messages:"; then
   ok "Dataset already exists"
-  imessage-analysis status
+  "$IMESSAGE_BIN" status
 else
   echo ""
   warn "No dataset yet. You need to run the first sync from ${BOLD}Apple Terminal.app${RESET}."

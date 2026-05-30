@@ -33,8 +33,8 @@ By default, `imessage-analysis` maps phone numbers and email addresses to human-
 Pass the path with `--contacts`:
 
 ```sh
-imessage-analysis etl --contacts ~/my-contacts.toml
-imessage-analysis refresh --contacts ~/my-contacts.toml
+imessage-analysis sync --contacts ~/my-contacts.toml
+imessage-analysis sync --contacts ~/my-contacts.toml
 ```
 
 The contacts file is only read during ETL / refresh — it is not needed for query or analysis commands after the Parquet file is built.
@@ -44,7 +44,7 @@ The contacts file is only read during ETL / refresh — it is not needed for que
 If you do not want the tool to query Contacts.app (e.g. for privacy, or because you manage all names via the config file):
 
 ```sh
-imessage-analysis etl --no-auto-contacts --contacts ~/my-contacts.toml
+imessage-analysis sync --no-auto-contacts --contacts ~/my-contacts.toml
 ```
 
 ## Phone number normalization

@@ -23,7 +23,7 @@ pub enum Error {
     #[error("Cannot open database at {path}: {reason}\n  If Messages is running, try copying the database first, or grant Full Disk Access to Terminal:\n  System Settings → Privacy & Security → Full Disk Access")]
     DbAccessDenied { path: String, reason: String },
 
-    #[error("No dataset found at {path}. Run `imessage-analysis etl` first.")]
+    #[error("No dataset found at {path}. Run `imessage-analysis sync` first.")]
     DatasetNotFound { path: String },
 }
 

@@ -1,5 +1,6 @@
 use comfy_table::{presets::UTF8_FULL_CONDENSED, Cell, CellAlignment, Table};
 use datafusion::arrow::datatypes::DataType;
+use datafusion::arrow::error::ArrowError;
 use datafusion::arrow::record_batch::RecordBatch;
 use datafusion::arrow::util::display::{ArrayFormatter, FormatOptions};
 
@@ -48,9 +49,12 @@ fn is_numeric(dt: &DataType) -> bool {
     )
 }
 
-fn make_formatters<'a>(batch: &'a RecordBatch, opts: &'a FormatOptions) -> Vec<ArrayFormatter<'a>> {
+fn make_formatters<'a>(
+    batch: &'a RecordBatch,
+    opts: &'a FormatOptions,
+) -> Result<Vec<ArrayFormatter<'a>>, ArrowError> {
     (0..batch.num_columns())
-        .map(|i| ArrayFormatter::try_new(batch.column(i).as_ref(), opts).unwrap())
+        .map(|i| ArrayFormatter::try_new(batch.column(i).as_ref(), opts))
         .collect()
 }
 
@@ -75,7 +79,7 @@ fn print_table(batches: &[RecordBatch], limit: usize) {
     let mut total = 0usize;
 
     for batch in batches {
-        let formatters = make_formatters(batch, &opts);
+        let Ok(formatters) = make_formatters(batch, &opts) else { continue };
         for row in 0..batch.num_rows() {
             total += 1;
             if printed < limit {
@@ -104,7 +108,7 @@ fn print_json(batches: &[RecordBatch], limit: usize) {
 
     let mut printed = 0;
     'outer: for batch in batches {
-        let formatters = make_formatters(batch, &opts);
+        let Ok(formatters) = make_formatters(batch, &opts) else { continue };
         for row in 0..batch.num_rows() {
             if printed >= limit {
                 break 'outer;
@@ -127,7 +131,7 @@ fn print_csv(batches: &[RecordBatch], limit: usize) {
 
     let mut printed = 0;
     'outer: for batch in batches {
-        let formatters = make_formatters(batch, &opts);
+        let Ok(formatters) = make_formatters(batch, &opts) else { continue };
         for row in 0..batch.num_rows() {
             if printed >= limit {
                 break 'outer;

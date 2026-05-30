@@ -33,7 +33,10 @@ fn chat_membership_built_correctly() {
     // Chat 1: just Alice (handle 1)
     let chat1 = raw.chat_members.get(&1).expect("chat 1 missing");
     assert_eq!(chat1.handle_ids.len(), 1);
-    assert_eq!(chat1.contact_infos[0], "+14155550001");
+    assert_eq!(
+        chat1.contact_infos.first().map(String::as_str),
+        Some("+14155550001")
+    );
     // Chat 2: Alice and Bob (handles 1 and 2)
     let chat2 = raw.chat_members.get(&2).expect("chat 2 missing");
     assert_eq!(chat2.handle_ids.len(), 2);

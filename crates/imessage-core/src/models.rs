@@ -44,17 +44,18 @@ pub fn detect_reaction(associated_message_type: i64) -> &'static str {
 }
 
 pub fn detect_message_effect(expressive_send_style_id: &str) -> String {
-    expressive_send_style_id
+    let segment = expressive_send_style_id
         .split('.')
         .next_back()
-        .unwrap_or("no-effect")
-        .replace("CK", "")
-        .replace("Effect", "")
-        .to_string()
+        .unwrap_or("");
+    if segment.is_empty() {
+        return "no-effect".to_string();
+    }
+    segment.replace("CK", "").replace("Effect", "")
 }
 
 pub fn extract_link_domain(text: &str) -> Option<String> {
-    let start = text.find("http")?;
+    let start = text.find("https://").or_else(|| text.find("http://"))?;
     let url_str = text[start..]
         .split(|c: char| c.is_whitespace() || c == ')' || c == '>' || c == ',' || c == ';')
         .next()?

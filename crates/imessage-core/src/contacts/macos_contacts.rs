@@ -48,10 +48,10 @@ pub fn fetch() -> Result<HashMap<String, String>> {
                     &block,
                 );
 
-                // Wait for the completion handler
+                // Wait for the completion handler — predicate-guarded to avoid spurious wakeups
                 let (lock, cvar) = &*granted;
                 let result = lock.lock().unwrap();
-                let result = cvar.wait(result).unwrap();
+                let result = cvar.wait_while(result, |g| !*g).unwrap();
                 if !*result {
                     tracing::warn!(
                         "Contacts.app access not granted — \

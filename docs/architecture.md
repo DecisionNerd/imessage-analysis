@@ -95,14 +95,14 @@ src/
 
 The MCP server (`imessage-mcp`) is a long-lived process that speaks JSON-RPC 2.0 over stdio. It holds a single `DataFusion SessionContext` in memory across all requests, avoiding re-parsing the Parquet schema on every tool call.
 
-After `run_etl` or `refresh`, the engine is invalidated so the next query re-initialises against the updated Parquet file.
+After `sync`, the engine is invalidated so the next query re-initialises against the updated Parquet file.
 
 ```
 stdin → JSON-RPC message → server::handle()
                                ├── initialize         → return capabilities
                                ├── tools/list         → return tool schemas
                                └── tools/call         → tools::call()
-                                                           ├── run_etl / refresh (ETL layer)
+                                                           ├── sync (ETL layer)
                                                            └── query / analysis  (DataFusion)
                                                                  → JSON rows → stdout
 ```
@@ -112,7 +112,7 @@ stdin → JSON-RPC message → server::handle()
 Apple's `message` table uses auto-incrementing `ROWID`. New messages always have a higher ROWID than existing ones.
 
 1. `metadata.json` stores `last_message_rowid` after each ETL run
-2. `refresh` runs `SELECT ... FROM message WHERE ROWID > :watermark`
+2. `sync` runs `SELECT ... FROM message WHERE ROWID > :watermark`
 3. Transforms and writes a new Parquet file
 4. Updates the watermark
 
@@ -126,4 +126,4 @@ Python functions return `pyarrow.Table` objects via zero-copy Arrow FFI, so `.to
 
 ## Parquet schema versioning
 
-`metadata.json` includes a `schema_version` integer. If the Parquet schema changes between releases (new or renamed columns), `schema_version` is incremented and the tool will prompt the user to re-run `etl` rather than silently producing incorrect results.
+`metadata.json` includes a `schema_version` integer. If the Parquet schema changes between releases (new or renamed columns), `schema_version` is incremented and the tool will prompt the user to re-run `sync` rather than silently producing incorrect results.

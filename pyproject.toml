@@ -4,5 +4,4 @@ version = "0.1.0"
 description = "iMessage data extraction and analysis toolkit"
 readme = "README.md"
 requires-python = ">=3.11"
-dynamic = ["version"]
 dependencies = []

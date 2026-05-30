@@ -28,8 +28,8 @@ fn make_config(
     config
 }
 
-fn rt() -> tokio::runtime::Runtime {
-    tokio::runtime::Runtime::new().unwrap()
+fn rt() -> PyResult<tokio::runtime::Runtime> {
+    tokio::runtime::Runtime::new().map_err(to_py_err)
 }
 
 fn to_py_err(e: impl std::fmt::Display) -> PyErr {
@@ -37,7 +37,7 @@ fn to_py_err(e: impl std::fmt::Display) -> PyErr {
 }
 
 fn run_sql<'py>(py: Python<'py>, config: &EtlConfig, sql: &str) -> PyResult<Bound<'py, PyAny>> {
-    let batches = rt().block_on(async {
+    let batches = rt()?.block_on(async {
         let engine = QueryEngine::open(&config.data_dir).await.map_err(to_py_err)?;
         engine.execute(sql).await.map_err(to_py_err)
     })?;

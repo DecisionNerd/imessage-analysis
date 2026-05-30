@@ -1,6 +1,6 @@
 # Data Model
 
-After running `imessage-analysis etl`, all data is stored as a single Parquet file at `~/.imessage-analysis/messages.parquet`. The `messages` table has the following columns:
+After running `imessage-analysis sync`, all data is stored as a single Parquet file at `~/.imessage-analysis/messages.parquet`. The `messages` table has the following columns:
 
 | Column | Type | Nullable | Description |
 |---|---|---|---|
@@ -83,4 +83,4 @@ Alongside the Parquet file, `~/.imessage-analysis/metadata.json` tracks ETL stat
 }
 ```
 
-The `last_message_rowid` watermark is used by `imessage-analysis refresh` to fetch only new messages.
+The `last_message_rowid` watermark is used by `imessage-analysis sync` to fetch only new messages.

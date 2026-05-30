@@ -151,15 +151,20 @@ pub fn seasonality_month(direction: Option<&str>) -> String {
 
 /// Substring search across name and contact_info columns.
 pub fn search_contacts(query: &str, limit: usize) -> String {
-    let escaped = query.replace('\'', "''").to_lowercase();
+    let escaped = query
+        .replace('\\', "\\\\")
+        .replace('%', "\\%")
+        .replace('_', "\\_")
+        .replace('\'', "''")
+        .to_lowercase();
     format!(
         "SELECT
              name,
              contact_info,
              COUNT(*) AS message_count
          FROM messages
-         WHERE (lower(coalesce(name, '')) LIKE '%{escaped}%'
-             OR lower(coalesce(contact_info, '')) LIKE '%{escaped}%')
+         WHERE (lower(coalesce(name, '')) LIKE '%{escaped}%' ESCAPE '\\'
+             OR lower(coalesce(contact_info, '')) LIKE '%{escaped}%' ESCAPE '\\')
            AND (name IS NOT NULL OR contact_info IS NOT NULL)
          GROUP BY name, contact_info
          ORDER BY message_count DESC

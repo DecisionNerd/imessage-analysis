@@ -10,8 +10,8 @@ Releases are triggered by pushing a version tag. The CI pipeline handles everyth
 ## Cutting a release
 
 ```sh
-# Make sure you're on master and the working tree is clean
-git checkout master
+# Make sure you're on main and the working tree is clean
+git checkout main
 git pull
 
 # Tag and push — this triggers the release workflow
@@ -42,7 +42,7 @@ This project follows [Semantic Versioning](https://semver.org):
 - **Minor** (`v0.x.0`) — new features, backward-compatible
 - **Major** (`vx.0.0`) — breaking changes to the CLI interface or Parquet schema
 
-When the Parquet schema changes (new or renamed columns), increment `schema_version` in `crates/imessage-core/src/storage/metadata.rs` so that stale datasets are detected and users are prompted to re-run `etl`.
+When the Parquet schema changes (new or renamed columns), increment `schema_version` in `crates/imessage-core/src/storage/metadata.rs` so that stale datasets are detected and users are prompted to re-run `sync`.
 
 ## Homebrew tap structure
 
