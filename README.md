@@ -168,4 +168,4 @@ This is a separate, ground-up Rust rewrite that extends the concept with a nativ
 
 ## License
 
-Copyright (C) 2024 David Spencer. Released under the [GNU General Public License v3.0](LICENSE).
+Copyright (C) 2026 David Spencer. Released under the [GNU General Public License v3.0](LICENSE).
