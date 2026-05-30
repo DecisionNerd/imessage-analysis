@@ -79,7 +79,9 @@ fn print_table(batches: &[RecordBatch], limit: usize) {
     let mut total = 0usize;
 
     for batch in batches {
-        let Ok(formatters) = make_formatters(batch, &opts) else { continue };
+        let Ok(formatters) = make_formatters(batch, &opts) else {
+            continue;
+        };
         for row in 0..batch.num_rows() {
             total += 1;
             if printed < limit {
@@ -108,14 +110,19 @@ fn print_json(batches: &[RecordBatch], limit: usize) {
 
     let mut printed = 0;
     'outer: for batch in batches {
-        let Ok(formatters) = make_formatters(batch, &opts) else { continue };
+        let Ok(formatters) = make_formatters(batch, &opts) else {
+            continue;
+        };
         for row in 0..batch.num_rows() {
             if printed >= limit {
                 break 'outer;
             }
             let mut map = serde_json::Map::new();
             for (name, f) in fields.iter().zip(formatters.iter()) {
-                map.insert(name.to_string(), serde_json::Value::String(f.value(row).to_string()));
+                map.insert(
+                    name.to_string(),
+                    serde_json::Value::String(f.value(row).to_string()),
+                );
             }
             println!("{}", serde_json::Value::Object(map));
             printed += 1;
@@ -131,7 +138,9 @@ fn print_csv(batches: &[RecordBatch], limit: usize) {
 
     let mut printed = 0;
     'outer: for batch in batches {
-        let Ok(formatters) = make_formatters(batch, &opts) else { continue };
+        let Ok(formatters) = make_formatters(batch, &opts) else {
+            continue;
+        };
         for row in 0..batch.num_rows() {
             if printed >= limit {
                 break 'outer;

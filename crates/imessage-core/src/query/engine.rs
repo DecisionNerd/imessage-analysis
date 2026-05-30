@@ -1,10 +1,12 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use datafusion::prelude::*;
 use datafusion::arrow::record_batch::RecordBatch;
 use datafusion::datasource::file_format::parquet::ParquetFormat;
-use datafusion::datasource::listing::{ListingOptions, ListingTable, ListingTableConfig, ListingTableUrl};
+use datafusion::datasource::listing::{
+    ListingOptions, ListingTable, ListingTableConfig, ListingTableUrl,
+};
+use datafusion::prelude::*;
 
 use crate::error::{Error, Result};
 use crate::storage::parquet::messages_path;
@@ -28,8 +30,7 @@ impl QueryEngine {
             .map_err(|e| Error::Config(e.to_string()))?;
 
         let file_format = Arc::new(ParquetFormat::default().with_enable_pruning(true));
-        let listing_options = ListingOptions::new(file_format)
-            .with_file_extension(".parquet");
+        let listing_options = ListingOptions::new(file_format).with_file_extension(".parquet");
 
         let config = ListingTableConfig::new(table_url)
             .with_listing_options(listing_options)
@@ -37,9 +38,8 @@ impl QueryEngine {
             .await
             .map_err(|e| Error::Config(e.to_string()))?;
 
-        let table = Arc::new(
-            ListingTable::try_new(config).map_err(|e| Error::Config(e.to_string()))?,
-        );
+        let table =
+            Arc::new(ListingTable::try_new(config).map_err(|e| Error::Config(e.to_string()))?);
 
         ctx.register_table("messages", table)
             .map_err(|e| Error::Config(e.to_string()))?;

@@ -68,7 +68,11 @@ pub fn read_since(db_path: &Path, since_rowid: i64) -> Result<RawData> {
 
     let messages = load_messages(&conn, since_rowid)?;
     let chat_members = load_chat_members(&conn)?;
-    let max_message_rowid = messages.iter().map(|m| m.message_id).max().unwrap_or(since_rowid);
+    let max_message_rowid = messages
+        .iter()
+        .map(|m| m.message_id)
+        .max()
+        .unwrap_or(since_rowid);
 
     Ok(RawData {
         messages,
@@ -141,8 +145,8 @@ fn load_chat_members(conn: &Connection) -> Result<HashMap<i64, ChatMembership>> 
     let mut stmt = conn.prepare(sql)?;
     let rows = stmt.query_map([], |row| {
         Ok((
-            row.get::<_, i64>(0)?,  // chat_id
-            row.get::<_, i64>(1)?,  // handle_id
+            row.get::<_, i64>(0)?,    // chat_id
+            row.get::<_, i64>(1)?,    // handle_id
             row.get::<_, String>(2)?, // contact_info
         ))
     })?;

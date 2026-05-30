@@ -148,9 +148,7 @@ enum Commands {
         limit: usize,
     },
     /// Generate shell completions
-    Completions {
-        shell: Shell,
-    },
+    Completions { shell: Shell },
 }
 
 fn sent_received_filter(sent: bool, received: bool) -> Option<&'static str> {
@@ -187,11 +185,26 @@ fn main() {
         Commands::SearchContacts { query, limit } => {
             commands::analysis::search_contacts(&config, &query, limit, &fmt)
         }
-        Commands::TopContacts { limit, year, direct_only, sent, received } => {
+        Commands::TopContacts {
+            limit,
+            year,
+            direct_only,
+            sent,
+            received,
+        } => {
             let direction = sent_received_filter(sent, received);
             commands::analysis::top_contacts(&config, limit, year, direct_only, direction, &fmt)
         }
-        Commands::TimeSeries { contact, window, year, start, end, sent, received, limit } => {
+        Commands::TimeSeries {
+            contact,
+            window,
+            year,
+            start,
+            end,
+            sent,
+            received,
+            limit,
+        } => {
             let direction = sent_received_filter(sent, received);
             let (start, end) = if let Some(y) = year {
                 (Some(format!("{y}-01-01")), Some(format!("{y}-12-31")))
@@ -209,13 +222,22 @@ fn main() {
                 &fmt,
             )
         }
-        Commands::Reactions { contact, year, sent, received } => {
+        Commands::Reactions {
+            contact,
+            year,
+            sent,
+            received,
+        } => {
             let direction = sent_received_filter(sent, received);
             commands::analysis::reactions(&config, contact.as_deref(), year, direction, &fmt)
         }
         Commands::Effects { year } => commands::analysis::effects(&config, year, &fmt),
         Commands::Links { limit } => commands::analysis::links(&config, limit, &fmt),
-        Commands::Seasonality { kind, sent, received } => {
+        Commands::Seasonality {
+            kind,
+            sent,
+            received,
+        } => {
             let direction = sent_received_filter(sent, received);
             commands::analysis::seasonality(&config, &kind, direction, &fmt)
         }

@@ -4,8 +4,7 @@ use std::path::PathBuf;
 use imessage_core::etl::{sqlite_reader, transforms};
 
 fn fixture_db() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("fixtures/test_chat.db")
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("fixtures/test_chat.db")
 }
 
 #[test]
@@ -58,11 +57,28 @@ fn transforms_schema_has_expected_columns() {
     let schema = batch.schema();
     let names: Vec<&str> = schema.fields().iter().map(|f| f.name().as_str()).collect();
     for col in &[
-        "message_id", "is_from_me", "text_combined", "text", "inferred_text",
-        "handle_id", "contact_info", "updated_contact_info", "chat_id",
-        "chat_members_handles", "chat_members_contact_info", "chat_size",
-        "is_audio_message", "message_effect", "reaction", "is_thread_reply",
-        "link_domain", "name", "timestamp", "date", "month", "year",
+        "message_id",
+        "is_from_me",
+        "text_combined",
+        "text",
+        "inferred_text",
+        "handle_id",
+        "contact_info",
+        "updated_contact_info",
+        "chat_id",
+        "chat_members_handles",
+        "chat_members_contact_info",
+        "chat_size",
+        "is_audio_message",
+        "message_effect",
+        "reaction",
+        "is_thread_reply",
+        "link_domain",
+        "name",
+        "timestamp",
+        "date",
+        "month",
+        "year",
     ] {
         assert!(names.contains(col), "missing column: {col}");
     }

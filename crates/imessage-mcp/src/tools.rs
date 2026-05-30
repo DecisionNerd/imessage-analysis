@@ -161,7 +161,10 @@ pub async fn call(state: &ServerState, name: &str, args: Value) -> Result<Value,
             if summary.contacts_resolved == 0 {
                 msg.push_str("\n\n⚠ Contact names were not resolved — names will show as phone numbers. Grant Contacts access in System Settings → Privacy & Security → Contacts, then re-run sync.");
             } else {
-                msg.push_str(&format!("\n{} contacts resolved.", summary.contacts_resolved));
+                msg.push_str(&format!(
+                    "\n{} contacts resolved.",
+                    summary.contacts_resolved
+                ));
             }
             Ok(json!({ "content": [{ "type": "text", "text": msg }] }))
         }
@@ -189,15 +192,28 @@ pub async fn call(state: &ServerState, name: &str, args: Value) -> Result<Value,
                     })
                 }
             };
-            Ok(json!({ "content": [{ "type": "text", "text": serde_json::to_string(&result).unwrap() }] }))
+            Ok(
+                json!({ "content": [{ "type": "text", "text": serde_json::to_string(&result).unwrap() }] }),
+            )
         }
 
         "schema" => {
             state.ensure_engine().await?;
             let guard = state.engine.read().await;
             let engine = guard.as_ref().unwrap();
-            let batches = engine.execute("SELECT * FROM messages LIMIT 0").await.map_err(|e| e.to_string())?;
-            let schema_str = format!("{}", batches.first().map(|b| b.schema()).unwrap_or_else(|| std::sync::Arc::new(datafusion::arrow::datatypes::Schema::empty())));
+            let batches = engine
+                .execute("SELECT * FROM messages LIMIT 0")
+                .await
+                .map_err(|e| e.to_string())?;
+            let schema_str = format!(
+                "{}",
+                batches
+                    .first()
+                    .map(|b| b.schema())
+                    .unwrap_or_else(|| std::sync::Arc::new(
+                        datafusion::arrow::datatypes::Schema::empty()
+                    ))
+            );
             Ok(json!({ "content": [{ "type": "text", "text": schema_str }] }))
         }
 
@@ -209,23 +225,22 @@ pub async fn call(state: &ServerState, name: &str, args: Value) -> Result<Value,
             let engine = guard.as_ref().unwrap();
             let batches = engine.execute(&sql).await.map_err(|e| e.to_string())?;
             let rows = batches_to_json(&batches, limit);
-            Ok(json!({ "content": [{ "type": "text", "text": serde_json::to_string(&rows).unwrap() }] }))
+            Ok(
+                json!({ "content": [{ "type": "text", "text": serde_json::to_string(&rows).unwrap() }] }),
+            )
         }
     }
 }
 
 fn build_sql(name: &str, args: &Value) -> Result<String, String> {
-    let str_arg = |key: &str| -> Option<String> {
-        args.get(key)?.as_str().map(str::to_string)
-    };
-    let int_arg = |key: &str| -> Option<i32> {
-        args.get(key)?.as_i64().map(|v| v as i32)
-    };
-    let bool_arg = |key: &str| -> bool {
-        args.get(key).and_then(|v| v.as_bool()).unwrap_or(false)
-    };
+    let str_arg = |key: &str| -> Option<String> { args.get(key)?.as_str().map(str::to_string) };
+    let int_arg = |key: &str| -> Option<i32> { args.get(key)?.as_i64().map(|v| v as i32) };
+    let bool_arg = |key: &str| -> bool { args.get(key).and_then(|v| v.as_bool()).unwrap_or(false) };
     let usize_arg = |key: &str, default: usize| -> usize {
-        args.get(key).and_then(|v| v.as_u64()).map(|v| v as usize).unwrap_or(default)
+        args.get(key)
+            .and_then(|v| v.as_u64())
+            .map(|v| v as usize)
+            .unwrap_or(default)
     };
 
     let direction: Option<String> = match (bool_arg("sent"), bool_arg("received")) {
@@ -236,12 +251,21 @@ fn build_sql(name: &str, args: &Value) -> Result<String, String> {
     let dir = direction.as_deref();
 
     // Expand --year shorthand for time_series
-    let ts_start: Option<String> = int_arg("year").map(|y| format!("{y}-01-01")).or_else(|| str_arg("start"));
-    let ts_end: Option<String> = int_arg("year").map(|y| format!("{y}-12-31")).or_else(|| str_arg("end"));
+    let ts_start: Option<String> = int_arg("year")
+        .map(|y| format!("{y}-01-01"))
+        .or_else(|| str_arg("start"));
+    let ts_end: Option<String> = int_arg("year")
+        .map(|y| format!("{y}-12-31"))
+        .or_else(|| str_arg("end"));
 
     Ok(match name {
         "query" => str_arg("sql").ok_or("missing `sql` argument")?,
-        "top_contacts" => built_in::top_contacts(usize_arg("limit", 10), int_arg("year"), bool_arg("direct_only"), dir),
+        "top_contacts" => built_in::top_contacts(
+            usize_arg("limit", 10),
+            int_arg("year"),
+            bool_arg("direct_only"),
+            dir,
+        ),
         "time_series" => built_in::time_series(
             str_arg("contact").as_deref().map(str::to_string).as_deref(),
             usize_arg("window", 28),
@@ -249,14 +273,20 @@ fn build_sql(name: &str, args: &Value) -> Result<String, String> {
             ts_end.as_deref(),
             dir,
         ),
-        "reactions" => built_in::reactions(str_arg("contact").as_deref().map(str::to_string).as_deref(), int_arg("year"), dir),
+        "reactions" => built_in::reactions(
+            str_arg("contact").as_deref().map(str::to_string).as_deref(),
+            int_arg("year"),
+            dir,
+        ),
         "effects" => built_in::effects(int_arg("year")),
         "links" => built_in::links(usize_arg("limit", 20)),
         "seasonality" => match args.get("kind").and_then(|v| v.as_str()).unwrap_or("dow") {
             "month" => built_in::seasonality_month(dir),
             _ => built_in::seasonality_dow(dir),
         },
-        "contact_stats" => built_in::contact_stats(str_arg("contact").as_deref().map(str::to_string).as_deref()),
+        "contact_stats" => {
+            built_in::contact_stats(str_arg("contact").as_deref().map(str::to_string).as_deref())
+        }
         "search_contacts" => {
             let q = str_arg("query").ok_or("missing `query` argument")?;
             built_in::search_contacts(&q, usize_arg("limit", 20))

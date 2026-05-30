@@ -197,4 +197,3 @@ pub fn contact_stats(contact: Option<&str>) -> String {
          ORDER BY total_messages DESC"
     )
 }
-

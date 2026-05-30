@@ -20,7 +20,9 @@ pub fn run(config: &EtlConfig, force: bool, quiet: bool) -> Result<()> {
     };
 
     if is_first_run {
-        if let Some(s) = &spinner { s.set_message("Building message history…"); }
+        if let Some(s) = &spinner {
+            s.set_message("Building message history…");
+        }
     } else if let Some(ref m) = meta {
         if let Some(s) = &spinner {
             s.set_message(format!(
@@ -34,7 +36,9 @@ pub fn run(config: &EtlConfig, force: bool, quiet: bool) -> Result<()> {
         match imessage_core::run_etl(config) {
             Ok(s) => s,
             Err(e) => {
-                if let Some(s) = &spinner { s.finish_and_clear(); }
+                if let Some(s) = &spinner {
+                    s.finish_and_clear();
+                }
                 return Err(e);
             }
         }
@@ -43,13 +47,17 @@ pub fn run(config: &EtlConfig, force: bool, quiet: bool) -> Result<()> {
         match imessage_core::run_etl_since(config, since) {
             Ok(s) => s,
             Err(e) => {
-                if let Some(s) = &spinner { s.finish_and_clear(); }
+                if let Some(s) = &spinner {
+                    s.finish_and_clear();
+                }
                 return Err(e);
             }
         }
     };
 
-    if let Some(s) = &spinner { s.finish_and_clear(); }
+    if let Some(s) = &spinner {
+        s.finish_and_clear();
+    }
 
     if !quiet {
         if is_first_run {

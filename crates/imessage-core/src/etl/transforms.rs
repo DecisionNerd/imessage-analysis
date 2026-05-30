@@ -67,8 +67,7 @@ pub fn transform(
     let mut is_thread_reply = Int8Builder::with_capacity(len);
     let mut link_domain = StringBuilder::with_capacity(len, len * 16);
     let mut col_name = StringBuilder::with_capacity(len, len * 16);
-    let mut timestamp =
-        TimestampSecondBuilder::with_capacity(len).with_timezone(Arc::from("UTC"));
+    let mut timestamp = TimestampSecondBuilder::with_capacity(len).with_timezone(Arc::from("UTC"));
     let mut date = Date32Builder::with_capacity(len);
     let mut month = Int8Builder::with_capacity(len);
     let mut year = Int16Builder::with_capacity(len);
@@ -81,10 +80,7 @@ pub fn transform(
 
         // Text fields
         let native_text = row.text.as_deref();
-        let inf = row
-            .attributed_body
-            .as_deref()
-            .and_then(blob_parser::parse);
+        let inf = row.attributed_body.as_deref().and_then(blob_parser::parse);
 
         let combined = native_text.map(str::to_string).or_else(|| inf.clone());
 
@@ -109,8 +105,8 @@ pub fn transform(
                     .collect::<Vec<_>>()
                     .join(",")
             );
-            let contacts_json = serde_json::to_string(&m.contact_infos)
-                .unwrap_or_else(|_| "[]".to_string());
+            let contacts_json =
+                serde_json::to_string(&m.contact_infos).unwrap_or_else(|_| "[]".to_string());
             chat_members_handles.append_value(handles_json);
             chat_members_contact_info.append_value(contacts_json);
         } else {

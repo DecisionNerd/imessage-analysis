@@ -27,7 +27,12 @@ pub fn top_contacts(
     direction: Option<&str>,
     fmt: &Format,
 ) -> Result<()> {
-    run_query!(config, built_in::top_contacts(limit, year, direct_only, direction), limit, fmt)
+    run_query!(
+        config,
+        built_in::top_contacts(limit, year, direct_only, direction),
+        limit,
+        fmt
+    )
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -41,7 +46,12 @@ pub fn time_series(
     limit: usize,
     fmt: &Format,
 ) -> Result<()> {
-    run_query!(config, built_in::time_series(contact, window, start, end, direction), limit, fmt)
+    run_query!(
+        config,
+        built_in::time_series(contact, window, start, end, direction),
+        limit,
+        fmt
+    )
 }
 
 pub fn reactions(
@@ -51,7 +61,12 @@ pub fn reactions(
     direction: Option<&str>,
     fmt: &Format,
 ) -> Result<()> {
-    run_query!(config, built_in::reactions(contact, year, direction), 100, fmt)
+    run_query!(
+        config,
+        built_in::reactions(contact, year, direction),
+        100,
+        fmt
+    )
 }
 
 pub fn effects(config: &EtlConfig, year: Option<i32>, fmt: &Format) -> Result<()> {
@@ -75,7 +90,12 @@ pub fn seasonality(
     run_query!(config, sql, 50, fmt)
 }
 
-pub fn contact_stats(config: &EtlConfig, contact: Option<&str>, limit: usize, fmt: &Format) -> Result<()> {
+pub fn contact_stats(
+    config: &EtlConfig,
+    contact: Option<&str>,
+    limit: usize,
+    fmt: &Format,
+) -> Result<()> {
     run_query!(config, built_in::contact_stats(contact), limit, fmt)
 }
 

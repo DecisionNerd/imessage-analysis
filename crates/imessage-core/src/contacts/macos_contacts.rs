@@ -12,9 +12,9 @@ pub fn fetch() -> Result<HashMap<String, String>> {
     use objc2::runtime::{AnyObject, Bool, ProtocolObject};
     use objc2::ClassType;
     use objc2_contacts::{
-        CNAuthorizationStatus, CNContact, CNContactEmailAddressesKey,
-        CNContactFamilyNameKey, CNContactFetchRequest, CNContactGivenNameKey,
-        CNContactPhoneNumbersKey, CNContactStore, CNEntityType, CNKeyDescriptor,
+        CNAuthorizationStatus, CNContact, CNContactEmailAddressesKey, CNContactFamilyNameKey,
+        CNContactFetchRequest, CNContactGivenNameKey, CNContactPhoneNumbersKey, CNContactStore,
+        CNEntityType, CNKeyDescriptor,
     };
     use objc2_foundation::{NSArray, NSError, NSString};
 
@@ -37,16 +37,14 @@ pub fn fetch() -> Result<HashMap<String, String>> {
                 let granted = Arc::new((Mutex::new(false), Condvar::new()));
                 let granted_clone = Arc::clone(&granted);
 
-                let block = block2::RcBlock::new(move |access_granted: Bool, _error: *mut NSError| {
-                    let (lock, cvar) = &*granted_clone;
-                    *lock.lock().unwrap() = access_granted.as_bool();
-                    cvar.notify_one();
-                });
+                let block =
+                    block2::RcBlock::new(move |access_granted: Bool, _error: *mut NSError| {
+                        let (lock, cvar) = &*granted_clone;
+                        *lock.lock().unwrap() = access_granted.as_bool();
+                        cvar.notify_one();
+                    });
 
-                store.requestAccessForEntityType_completionHandler(
-                    CNEntityType::Contacts,
-                    &block,
-                );
+                store.requestAccessForEntityType_completionHandler(CNEntityType::Contacts, &block);
 
                 // Wait for the completion handler — predicate-guarded to avoid spurious wakeups
                 let (lock, cvar) = &*granted;
@@ -83,34 +81,32 @@ pub fn fetch() -> Result<HashMap<String, String>> {
         ];
         let keys_array = NSArray::from_vec(keys_vec);
 
-        let request = CNContactFetchRequest::initWithKeysToFetch(
-            CNContactFetchRequest::alloc(),
-            &keys_array,
-        );
+        let request =
+            CNContactFetchRequest::initWithKeysToFetch(CNContactFetchRequest::alloc(), &keys_array);
 
         let entries: RefCell<Vec<(String, String)>> = RefCell::new(Vec::new());
 
-        let block = block2::StackBlock::new(
-            |contact: NonNull<CNContact>, _stop: NonNull<Bool>| {
-                let contact = contact.as_ref();
-                let given = contact.givenName().to_string();
-                let family = contact.familyName().to_string();
-                let name = format!("{given} {family}").trim().to_string();
-                if name.is_empty() {
-                    return;
-                }
-                let phones = contact.phoneNumbers();
-                for labeled in phones.iter() {
-                    let raw = labeled.value().stringValue().to_string();
-                    entries.borrow_mut().push((normalize_phone(&raw), name.clone()));
-                }
-                let emails = contact.emailAddresses();
-                for labeled in emails.iter() {
-                    let email = labeled.value().to_string().to_lowercase();
-                    entries.borrow_mut().push((email, name.clone()));
-                }
-            },
-        );
+        let block = block2::StackBlock::new(|contact: NonNull<CNContact>, _stop: NonNull<Bool>| {
+            let contact = contact.as_ref();
+            let given = contact.givenName().to_string();
+            let family = contact.familyName().to_string();
+            let name = format!("{given} {family}").trim().to_string();
+            if name.is_empty() {
+                return;
+            }
+            let phones = contact.phoneNumbers();
+            for labeled in phones.iter() {
+                let raw = labeled.value().stringValue().to_string();
+                entries
+                    .borrow_mut()
+                    .push((normalize_phone(&raw), name.clone()));
+            }
+            let emails = contact.emailAddresses();
+            for labeled in emails.iter() {
+                let email = labeled.value().to_string().to_lowercase();
+                entries.borrow_mut().push((email, name.clone()));
+            }
+        });
 
         let mut error = None;
         let ok = store.enumerateContactsWithFetchRequest_error_usingBlock(
@@ -131,7 +127,9 @@ pub fn fetch() -> Result<HashMap<String, String>> {
         for (key, value) in entries.into_inner() {
             if let Some(existing) = map.get(&key) {
                 if existing != &value {
-                    tracing::warn!("Duplicate contact key {key:?}: keeping {existing:?}, ignoring {value:?}");
+                    tracing::warn!(
+                        "Duplicate contact key {key:?}: keeping {existing:?}, ignoring {value:?}"
+                    );
                 }
             } else {
                 map.insert(key, value);

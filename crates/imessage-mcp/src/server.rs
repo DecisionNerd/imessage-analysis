@@ -56,15 +56,18 @@ pub async fn handle(state: &ServerState, msg: Value) -> Option<Value> {
         "tools/list" => Ok(json!({ "tools": tools::list() })),
 
         "tools/call" => {
-            let tool_name = params
-                .get("name")
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
+            let tool_name = params.get("name").and_then(|v| v.as_str()).unwrap_or("");
             let args = params.get("arguments").cloned().unwrap_or(json!({}));
             tools::call(state, tool_name, args).await
         }
 
-        _ => return Some(error_response(id, -32601, &format!("Method not found: {method}"))),
+        _ => {
+            return Some(error_response(
+                id,
+                -32601,
+                &format!("Method not found: {method}"),
+            ))
+        }
     };
 
     Some(match result {

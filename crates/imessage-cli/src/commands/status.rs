@@ -1,4 +1,8 @@
-use imessage_core::{error::Result, models::EtlConfig, storage::{metadata::EtlMetadata, parquet::messages_path}};
+use imessage_core::{
+    error::Result,
+    models::EtlConfig,
+    storage::{metadata::EtlMetadata, parquet::messages_path},
+};
 
 pub fn run(config: &EtlConfig) -> Result<()> {
     let meta = EtlMetadata::load(&config.data_dir)?;
@@ -16,7 +20,10 @@ pub fn run(config: &EtlConfig) -> Result<()> {
 
             println!("Dataset:      {}", parquet.display());
             println!("Messages:     {}", format_count(m.total_messages));
-            println!("Last sync:    {}", m.last_run_utc.as_deref().unwrap_or("unknown"));
+            println!(
+                "Last sync:    {}",
+                m.last_run_utc.as_deref().unwrap_or("unknown")
+            );
             println!("Size:         {size}");
             println!("Schema:       v{}", m.schema_version);
 
@@ -36,7 +43,9 @@ fn format_count(n: u64) -> String {
     let s = n.to_string();
     let mut out = String::new();
     for (i, c) in s.chars().rev().enumerate() {
-        if i > 0 && i % 3 == 0 { out.push(','); }
+        if i > 0 && i % 3 == 0 {
+            out.push(',');
+        }
         out.push(c);
     }
     out.chars().rev().collect()

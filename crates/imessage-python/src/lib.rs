@@ -38,7 +38,9 @@ fn to_py_err(e: impl std::fmt::Display) -> PyErr {
 
 fn run_sql<'py>(py: Python<'py>, config: &EtlConfig, sql: &str) -> PyResult<Bound<'py, PyAny>> {
     let batches = rt()?.block_on(async {
-        let engine = QueryEngine::open(&config.data_dir).await.map_err(to_py_err)?;
+        let engine = QueryEngine::open(&config.data_dir)
+            .await
+            .map_err(to_py_err)?;
         engine.execute(sql).await.map_err(to_py_err)
     })?;
     let schema = if batches.is_empty() {
@@ -64,7 +66,9 @@ fn sync(
     let config = make_config(db_path, data_dir, contacts_config, auto_contacts);
     let meta = EtlMetadata::load(&config.data_dir).map_err(to_py_err)?;
     match meta {
-        None => imessage_core::run_etl(&config).map_err(to_py_err).map(|_| ()),
+        None => imessage_core::run_etl(&config)
+            .map_err(to_py_err)
+            .map(|_| ()),
         Some(m) => imessage_core::run_etl_since(&config, m.last_message_rowid)
             .map_err(to_py_err)
             .map(|_| ()),
@@ -81,7 +85,9 @@ fn run_etl(
     auto_contacts: bool,
 ) -> PyResult<()> {
     let config = make_config(db_path, data_dir, contacts_config, auto_contacts);
-    imessage_core::run_etl(&config).map_err(to_py_err).map(|_| ())
+    imessage_core::run_etl(&config)
+        .map_err(to_py_err)
+        .map(|_| ())
 }
 
 /// Incremental update — only messages since the last ETL run.
@@ -100,7 +106,11 @@ fn refresh(
 /// Execute arbitrary SQL against the messages dataset. Returns a pyarrow.Table.
 #[pyfunction]
 #[pyo3(signature = (sql, data_dir=None))]
-fn query<'py>(py: Python<'py>, sql: String, data_dir: Option<String>) -> PyResult<Bound<'py, PyAny>> {
+fn query<'py>(
+    py: Python<'py>,
+    sql: String,
+    data_dir: Option<String>,
+) -> PyResult<Bound<'py, PyAny>> {
     let config = make_config(None, data_dir, None, false);
     run_sql(py, &config, &sql)
 }
@@ -116,7 +126,11 @@ fn top_contacts<'py>(
     data_dir: Option<String>,
 ) -> PyResult<Bound<'py, PyAny>> {
     let config = make_config(None, data_dir, None, false);
-    run_sql(py, &config, &built_in::top_contacts(limit, year, direct_only, None))
+    run_sql(
+        py,
+        &config,
+        &built_in::top_contacts(limit, year, direct_only, None),
+    )
 }
 
 /// Daily message counts with rolling average. Returns a pyarrow.Table.
@@ -131,13 +145,17 @@ fn time_series<'py>(
     data_dir: Option<String>,
 ) -> PyResult<Bound<'py, PyAny>> {
     let config = make_config(None, data_dir, None, false);
-    run_sql(py, &config, &built_in::time_series(
-        contact.as_deref(),
-        window,
-        start.as_deref(),
-        end.as_deref(),
-        None,
-    ))
+    run_sql(
+        py,
+        &config,
+        &built_in::time_series(
+            contact.as_deref(),
+            window,
+            start.as_deref(),
+            end.as_deref(),
+            None,
+        ),
+    )
 }
 
 /// Reaction type breakdown. Returns a pyarrow.Table.
@@ -150,7 +168,11 @@ fn reactions<'py>(
     data_dir: Option<String>,
 ) -> PyResult<Bound<'py, PyAny>> {
     let config = make_config(None, data_dir, None, false);
-    run_sql(py, &config, &built_in::reactions(contact.as_deref(), year, None))
+    run_sql(
+        py,
+        &config,
+        &built_in::reactions(contact.as_deref(), year, None),
+    )
 }
 
 /// Message effect breakdown. Returns a pyarrow.Table.
