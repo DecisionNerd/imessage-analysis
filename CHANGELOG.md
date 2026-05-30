@@ -7,6 +7,13 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.1.3] — 2026-05-30
+
+### Added
+- `imessage_analysis.__version__` — exposes the installed package version
+
+---
+
 ## [0.1.2] — 2026-05-30
 
 ### Fixed

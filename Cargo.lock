@@ -1981,7 +1981,7 @@ dependencies = [
 
 [[package]]
 name = "imessage-cli"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "arrow",
  "chrono",
@@ -2002,7 +2002,7 @@ dependencies = [
 
 [[package]]
 name = "imessage-core"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "arrow",
  "block2",
@@ -2025,7 +2025,7 @@ dependencies = [
 
 [[package]]
 name = "imessage-mcp"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "arrow",
  "datafusion",
@@ -2041,7 +2041,7 @@ dependencies = [
 
 [[package]]
 name = "imessage-python"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "arrow",
  "imessage-core",
@@ -2052,7 +2052,7 @@ dependencies = [
 
 [[package]]
 name = "imessage-tests"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "arrow",
  "imessage-core",

@@ -23,6 +23,10 @@ interpreter does not, so calling sync() from Python will index messages
 but leave all contact names as phone numbers.
 """
 
+from importlib.metadata import version as _version
+
+__version__ = _version("imessage-analysis")
+
 from imessage_analysis._lib import (
     contact_stats,
     effects,
