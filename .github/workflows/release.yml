@@ -28,23 +28,37 @@ jobs:
       - name: Build release binaries
         run: cargo build --release --locked --bin imessage-analysis --bin imessage-mcp
 
-      - name: Create source tarball
+      - name: Create tarballs
         run: |
           VERSION="${GITHUB_REF_NAME}"
-          TARBALL_NAME="imessage-analysis-${VERSION#v}.tar.gz"
+          VERSION_BARE="${VERSION#v}"
+
+          # Source tarball (for cargo-based builds)
+          SOURCE_TARBALL="imessage-analysis-${VERSION_BARE}.tar.gz"
           git archive \
             --format=tar.gz \
-            --prefix="imessage-analysis-${VERSION#v}/" \
+            --prefix="imessage-analysis-${VERSION_BARE}/" \
             HEAD \
-            -o "$TARBALL_NAME"
-          echo "TARBALL=${TARBALL_NAME}" >> "$GITHUB_ENV"
+            -o "$SOURCE_TARBALL"
+
+          # Binary tarball (for Homebrew — no Rust required)
+          BINARY_TARBALL="imessage-analysis-${VERSION_BARE}-macos-arm64.tar.gz"
+          mkdir -p dist
+          cp target/release/imessage-analysis dist/
+          cp target/release/imessage-mcp dist/
+          tar -czf "$BINARY_TARBALL" -C dist imessage-analysis imessage-mcp
+
+          echo "SOURCE_TARBALL=${SOURCE_TARBALL}" >> "$GITHUB_ENV"
+          echo "BINARY_TARBALL=${BINARY_TARBALL}" >> "$GITHUB_ENV"
           echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
-          echo "VERSION_BARE=${VERSION#v}" >> "$GITHUB_ENV"
+          echo "VERSION_BARE=${VERSION_BARE}" >> "$GITHUB_ENV"
 
       - name: Compute SHA256
         run: |
-          SHA=$(shasum -a 256 "$TARBALL" | awk '{print $1}')
-          echo "SHA256=${SHA}" >> "$GITHUB_ENV"
+          SOURCE_SHA=$(shasum -a 256 "$SOURCE_TARBALL" | awk '{print $1}')
+          BINARY_SHA=$(shasum -a 256 "$BINARY_TARBALL" | awk '{print $1}')
+          echo "SOURCE_SHA256=${SOURCE_SHA}" >> "$GITHUB_ENV"
+          echo "BINARY_SHA256=${BINARY_SHA}" >> "$GITHUB_ENV"
 
       - name: Create GitHub Release
         env:
@@ -53,7 +67,8 @@ jobs:
           gh release create "$VERSION" \
             --title "$VERSION" \
             --notes-file CHANGELOG.md \
-            "$TARBALL" \
+            "$SOURCE_TARBALL" \
+            "$BINARY_TARBALL" \
             "target/release/imessage-analysis" \
             "target/release/imessage-mcp"
 
@@ -62,10 +77,8 @@ jobs:
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
           GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
-          # Point formula at the exact uploaded asset so url and sha256 match
-          TARBALL_URL="https://github.com/DecisionNerd/imessage-analysis/releases/download/${VERSION}/${TARBALL}"
+          BINARY_URL="https://github.com/DecisionNerd/imessage-analysis/releases/download/${VERSION}/${BINARY_TARBALL}"
 
-          # Clone the tap
           git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/DecisionNerd/homebrew-tap.git" tap-repo
           cd tap-repo
 
@@ -76,20 +89,55 @@ jobs:
           git push origin --delete "$BRANCH" 2>/dev/null || true
           git checkout -b "$BRANCH"
 
-          # Update url and sha256 in the formula
-          sed -i '' \
-            -e "s|url \".*\"|url \"${TARBALL_URL}\"|" \
-            -e "s|sha256 \".*\"|sha256 \"${SHA256}\"|" \
-            Formula/imessage-analysis.rb
+          cat > Formula/imessage-analysis.rb << FORMULA
+# Canonical formula — updated automatically by the release workflow.
+
+class ImessageAnalysis < Formula
+  desc "Query and analyse your iMessage history — AI agent, CLI, or Python"
+  homepage "https://github.com/DecisionNerd/imessage-analysis"
+  url "${BINARY_URL}"
+  sha256 "${BINARY_SHA256}"
+  license "GPL-3.0-only"
+  version "${VERSION_BARE}"
+
+  depends_on :macos
+
+  def install
+    bin.install "imessage-analysis"
+    bin.install "imessage-mcp"
+
+    # Sign with Contacts entitlement so macOS shows the permission dialog on first sync.
+    # Without this the binary has no bundle identifier and TCC silently denies it.
+    entitlements = buildpath/"entitlements.plist"
+    entitlements.write <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+      <dict>
+          <key>com.apple.security.contacts.read-write</key>
+          <true/>
+      </dict>
+      </plist>
+    XML
+    system "codesign", "--force", "--sign", "-",
+           "--entitlements", entitlements, bin/"imessage-analysis"
+
+    generate_completions_from_executable(bin/"imessage-analysis", "completions")
+  end
+
+  test do
+    system "#{bin}/imessage-analysis", "--version"
+  end
+end
+FORMULA
 
           git add Formula/imessage-analysis.rb
           git commit -m "imessage-analysis ${VERSION_BARE}"
           git push origin "$BRANCH"
 
-          # Open a PR
           gh pr create \
             --repo DecisionNerd/homebrew-tap \
             --title "Update imessage-analysis to ${VERSION_BARE}" \
-            --body "Automated formula update for release ${VERSION}." \
+            --body "Automated formula update for release ${VERSION}. Switches to binary tarball — no Rust required." \
             --base main \
             --head "$BRANCH"

@@ -2,21 +2,18 @@
 # This file is updated automatically by the release workflow.
 
 class ImessageAnalysis < Formula
-  desc "Extract, query, and analyse your Mac iMessage history"
+  desc "Query and analyse your iMessage history — AI agent, CLI, or Python"
   homepage "https://github.com/DecisionNerd/imessage-analysis"
-  url "https://github.com/DecisionNerd/imessage-analysis/archive/refs/tags/v0.1.0.tar.gz"
+  url "https://github.com/DecisionNerd/imessage-analysis/releases/download/v0.1.3/imessage-analysis-0.1.3-macos-arm64.tar.gz"
   sha256 ""
   license "GPL-3.0-only"
+  version "0.1.3"
 
-  depends_on "rust" => :build
   depends_on :macos
 
   def install
-    system "cargo", "build", "--release", "--locked",
-           "--bin", "imessage-analysis",
-           "--bin", "imessage-mcp"
-    bin.install "target/release/imessage-analysis"
-    bin.install "target/release/imessage-mcp"
+    bin.install "imessage-analysis"
+    bin.install "imessage-mcp"
 
     # Sign with Contacts entitlement so macOS shows the permission dialog on first sync.
     # Without this the binary has no bundle identifier and TCC silently denies it.
@@ -34,7 +31,6 @@ class ImessageAnalysis < Formula
     system "codesign", "--force", "--sign", "-",
            "--entitlements", entitlements, bin/"imessage-analysis"
 
-    # Shell completions
     generate_completions_from_executable(bin/"imessage-analysis", "completions")
   end
 
