@@ -89,47 +89,12 @@ jobs:
           git push origin --delete "$BRANCH" 2>/dev/null || true
           git checkout -b "$BRANCH"
 
-          cat > Formula/imessage-analysis.rb << FORMULA
-# Canonical formula — updated automatically by the release workflow.
-
-class ImessageAnalysis < Formula
-  desc "Query and analyse your iMessage history — AI agent, CLI, or Python"
-  homepage "https://github.com/DecisionNerd/imessage-analysis"
-  url "${BINARY_URL}"
-  sha256 "${BINARY_SHA256}"
-  license "GPL-3.0-only"
-  version "${VERSION_BARE}"
-
-  depends_on :macos
-
-  def install
-    bin.install "imessage-analysis"
-    bin.install "imessage-mcp"
-
-    # Sign with Contacts entitlement so macOS shows the permission dialog on first sync.
-    # Without this the binary has no bundle identifier and TCC silently denies it.
-    entitlements = buildpath/"entitlements.plist"
-    entitlements.write <<~XML
-      <?xml version="1.0" encoding="UTF-8"?>
-      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-      <plist version="1.0">
-      <dict>
-          <key>com.apple.security.contacts.read-write</key>
-          <true/>
-      </dict>
-      </plist>
-    XML
-    system "codesign", "--force", "--sign", "-",
-           "--entitlements", entitlements, bin/"imessage-analysis"
-
-    generate_completions_from_executable(bin/"imessage-analysis", "completions")
-  end
-
-  test do
-    system "#{bin}/imessage-analysis", "--version"
-  end
-end
-FORMULA
+          cp ../Formula/imessage-analysis.rb.tmpl Formula/imessage-analysis.rb
+          sed -i '' \
+            -e "s|BINARY_URL_PLACEHOLDER|${BINARY_URL}|" \
+            -e "s|SHA256_PLACEHOLDER|${BINARY_SHA256}|" \
+            -e "s|VERSION_PLACEHOLDER|${VERSION_BARE}|" \
+            Formula/imessage-analysis.rb
 
           git add Formula/imessage-analysis.rb
           git commit -m "imessage-analysis ${VERSION_BARE}"
