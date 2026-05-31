@@ -7,6 +7,13 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.1.4] — 2026-05-30
+
+### Changed
+- Homebrew formula now downloads a pre-built binary tarball — `brew install` no longer requires Rust and completes in seconds
+
+---
+
 ## [0.1.3] — 2026-05-30
 
 ### Added
