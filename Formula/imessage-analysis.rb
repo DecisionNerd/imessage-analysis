@@ -1,5 +1,6 @@
-# Reference copy — the canonical formula lives in github.com/DecisionNerd/homebrew-tap.
-# This file is updated automatically by the release workflow.
+# Reference copy only — kept for git history and local testing.
+# The canonical formula that users install from lives in github.com/DecisionNerd/homebrew-tap
+# and is updated automatically by the release workflow via Formula/imessage-analysis.rb.tmpl.
 
 class ImessageAnalysis < Formula
   desc "Query and analyse your iMessage history — AI agent, CLI, or Python"

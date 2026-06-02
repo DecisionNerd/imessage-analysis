@@ -14,7 +14,7 @@ brew tap DecisionNerd/tap
 brew install imessage-analysis
 ```
 
-This installs two binaries:
+Downloads and installs pre-built binaries — no Rust compilation required. This installs two binaries:
 
 | Binary | Purpose |
 |---|---|

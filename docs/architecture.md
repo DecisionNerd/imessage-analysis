@@ -124,6 +124,8 @@ The `imessage-python` crate is a `cdylib` built with [maturin](https://github.co
 
 Python functions return `pyarrow.Table` objects via zero-copy Arrow FFI, so `.to_pandas()` works without copying data.
 
+The Python package is **query-only**. `sync()`, `run_etl()`, and `refresh()` raise `RuntimeError` — the Python interpreter process cannot obtain macOS Contacts permission, so syncing from Python would produce a dataset with phone numbers instead of names. Users must sync via the CLI binary, which has the required entitlement embedded.
+
 ## Parquet schema versioning
 
 `metadata.json` includes a `schema_version` integer. If the Parquet schema changes between releases (new or renamed columns), `schema_version` is incremented and the tool will prompt the user to re-run `sync` rather than silently producing incorrect results.
