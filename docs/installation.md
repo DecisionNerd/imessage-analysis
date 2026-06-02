@@ -18,7 +18,7 @@ This installs two binaries:
 
 | Binary | Purpose |
 |---|---|
-| `imessage-analysis` | CLI for ETL and analysis |
+| `imessage-analysis` | CLI for sync and analysis |
 | `imessage-mcp` | MCP server for AI agents |
 
 To upgrade later:
@@ -26,6 +26,8 @@ To upgrade later:
 ```sh
 brew upgrade imessage-analysis
 ```
+
+The package is distributed via a third-party tap (`decisionnerd/tap`), so it shows as `decisionnerd/tap/imessage-analysis` in `brew upgrade` output rather than just `imessage-analysis`. This is normal — the install and upgrade experience is identical to any other Homebrew package. If it is eventually accepted into homebrew-core, the prefix will go away.
 
 ## From source
 
