@@ -11,12 +11,12 @@ on:
 
 jobs:
   build:
-    name: Build wheel (${{ matrix.python-version }}, ${{ matrix.os }})
+    name: Build wheel (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [macos-14, macos-13]
-        python-version: ['3.11', '3.12', '3.13']
+        python-version: ['3.11']
 
     steps:
       - uses: actions/checkout@v4
@@ -45,7 +45,7 @@ jobs:
       - name: Upload wheel artifact
         uses: actions/upload-artifact@v4
         with:
-          name: wheel-${{ matrix.os }}-py${{ matrix.python-version }}
+          name: wheel-${{ matrix.os }}
           path: crates/imessage-python/dist/*.whl
 
   publish:
