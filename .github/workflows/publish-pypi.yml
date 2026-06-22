@@ -1,8 +1,13 @@
-name: Python
+name: Publish to PyPI
 
 on:
-  # Build on PRs to catch wheel compilation errors early.
-  pull_request:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
   build:
@@ -42,3 +47,21 @@ jobs:
         with:
           name: wheel-${{ matrix.os }}
           path: crates/imessage-python/dist/*.whl
+
+  publish:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all wheels
+        uses: actions/download-artifact@v4
+        with:
+          pattern: wheel-*
+          merge-multiple: true
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
