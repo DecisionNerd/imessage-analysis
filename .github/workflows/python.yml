@@ -1,10 +1,11 @@
 name: Python
 
 on:
-  # Build and publish when a GitHub Release is published (created by release.yml).
-  # This naturally gates PyPI publishing on a successful binary release.
+  # Build and publish when a GitHub Release is published.
   release:
     types: [published]
+  # Manual fallback for releases created by a token that cannot trigger follow-up workflows.
+  workflow_dispatch:
   # Also build on PRs to catch wheel compilation errors early.
   pull_request:
 
@@ -51,7 +52,7 @@ jobs:
     name: Publish to PyPI
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'release'
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
     environment:
       name: pypi
       url: https://pypi.org/project/imessage-analysis/
