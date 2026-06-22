@@ -7,6 +7,18 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.2.0] — 2026-06-22
+
+### Added
+- `body_text` column for analysis-ready message bodies across SMS, RCS, and iMessage-native rows
+- Modern typedstream decoding for `attributedBody` blobs, with legacy marker-based extraction kept as fallback
+
+### Changed
+- Bumped the Parquet schema version to `2`; users should re-run `sync` to rebuild datasets with `body_text`
+- Updated query guidance and docs to use `body_text` for NLP, search, and retrieval
+
+---
+
 ## [0.1.4] — 2026-05-30
 
 ### Changed

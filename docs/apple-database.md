@@ -61,9 +61,9 @@ Lists all participants in each conversation.
 
 ### NULL text fields
 
-Apple migrated to runtime-encoded message bodies at some point, meaning the `text` column is NULL for many messages even though they had visible content. `imessage-analysis` works around this by extracting the text from the `attributedBody` binary column. This extraction is reliable but not perfect, and works only for ASCII/English text.
+Apple migrated to runtime-encoded message bodies at some point, meaning the `text` column is NULL for many messages even though they had visible content. `imessage-analysis` works around this by extracting the text from the `attributedBody` binary column. This extraction is best-effort: modern typedstream bodies are decoded directly, while older or unusual blobs fall back to marker-based extraction.
 
-The `text_combined` column in the output uses `text` when available and falls back to `inferred_text` otherwise.
+The `text` and `inferred_text` columns preserve where the body came from. For analysis and retrieval, use `body_text`: it contains the best parsed message body across SMS, RCS, and iMessage-native rows. The older `text_combined` column is kept as a compatibility alias.
 
 ### Multiple handles per person
 

@@ -718,6 +718,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "crabstep"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f51aca82b27bf6f21503377c15b4b16c70e2505f73ea98068bdc73bfa4449d22"
+
+[[package]]
 name = "crc32fast"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1981,7 +1987,7 @@ dependencies = [
 
 [[package]]
 name = "imessage-cli"
-version = "0.1.4"
+version = "0.2.0"
 dependencies = [
  "arrow",
  "chrono",
@@ -2002,11 +2008,12 @@ dependencies = [
 
 [[package]]
 name = "imessage-core"
-version = "0.1.4"
+version = "0.2.0"
 dependencies = [
  "arrow",
  "block2",
  "chrono",
+ "crabstep",
  "datafusion",
  "dirs-next",
  "objc2",
@@ -2025,7 +2032,7 @@ dependencies = [
 
 [[package]]
 name = "imessage-mcp"
-version = "0.1.4"
+version = "0.2.0"
 dependencies = [
  "arrow",
  "datafusion",
@@ -2041,7 +2048,7 @@ dependencies = [
 
 [[package]]
 name = "imessage-python"
-version = "0.1.4"
+version = "0.2.0"
 dependencies = [
  "arrow",
  "imessage-core",
@@ -2052,7 +2059,7 @@ dependencies = [
 
 [[package]]
 name = "imessage-tests"
-version = "0.1.4"
+version = "0.2.0"
 dependencies = [
  "arrow",
  "imessage-core",

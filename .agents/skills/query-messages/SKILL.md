@@ -81,9 +81,18 @@ Use `direct_only: true` to exclude group chats.
 
 ## Example SQL Patterns
 
+Use `body_text` for message-body analysis, search, topic summaries, and NLP. `text` is the raw SQLite `message.text` value, `inferred_text` is the decoded `attributedBody` fallback, and `text_combined` is kept as a legacy compatibility alias.
+
 ```sql
 -- Messages per year
 SELECT year, COUNT(*) AS n FROM messages GROUP BY year ORDER BY year
+
+-- Search message body text
+SELECT timestamp, name, is_from_me, body_text
+FROM messages
+WHERE body_text ILIKE '%dinner%'
+ORDER BY timestamp DESC
+LIMIT 20
 
 -- Most active months
 SELECT year, month, COUNT(*) AS n FROM messages

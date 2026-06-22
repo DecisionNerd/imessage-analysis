@@ -6,9 +6,10 @@ After running `imessage-analysis sync`, all data is stored as a single Parquet f
 |---|---|---|---|
 | `message_id` | Int64 | No | Unique message identifier (`ROWID` from Apple's database) |
 | `is_from_me` | Int8 | No | `1` = sent by you, `0` = received |
-| `text` | Utf8 | Yes | Raw message text from Apple's database (can be NULL — see `text_combined`) |
-| `inferred_text` | Utf8 | Yes | Text extracted from the `attributedBody` binary column when `text` is NULL (English only) |
-| `text_combined` | Utf8 | Yes | Best available text: `text` if non-null, otherwise `inferred_text` |
+| `text` | Utf8 | Yes | Raw SQLite `message.text` value from Apple's database (can be NULL) |
+| `inferred_text` | Utf8 | Yes | Text extracted from the `attributedBody` binary column when `text` is NULL |
+| `text_combined` | Utf8 | Yes | Compatibility field with the best available text: `text` if non-null, otherwise `inferred_text` |
+| `body_text` | Utf8 | Yes | Analysis-ready message body for NLP, search, and retrieval across SMS, RCS, and iMessage-native rows |
 | `handle_id` | Int64 | No | Internal ID of the sender/receiver handle |
 | `contact_info` | Utf8 | Yes | Phone number or email address of the other party |
 | `updated_contact_info` | Utf8 | Yes | Corrected recipient field: for sent messages in 1-on-1 chats this is the other person; for group chats it is `group-chat` |
@@ -60,7 +61,7 @@ The Parquet file can be queried with any tool that supports the format:
 
 ```sh
 # DuckDB
-duckdb -c "SELECT name, COUNT(*) FROM '~/.imessage-analysis/messages.parquet' GROUP BY name ORDER BY 2 DESC LIMIT 10"
+duckdb -c "SELECT name, body_text FROM '~/.imessage-analysis/messages.parquet' WHERE body_text IS NOT NULL LIMIT 10"
 
 # Python / pandas
 import pandas as pd
@@ -79,7 +80,7 @@ Alongside the Parquet file, `~/.imessage-analysis/metadata.json` tracks ETL stat
   "last_message_rowid": 375000,
   "last_run_utc": "2026-05-29T10:30:00Z",
   "total_messages": 374804,
-  "schema_version": 1
+  "schema_version": 2
 }
 ```
 

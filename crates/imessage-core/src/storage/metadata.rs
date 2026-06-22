@@ -16,7 +16,7 @@ pub struct EtlMetadata {
 }
 
 impl EtlMetadata {
-    pub const CURRENT_SCHEMA_VERSION: u32 = 1;
+    pub const CURRENT_SCHEMA_VERSION: u32 = 2;
 
     pub fn load(data_dir: &Path) -> Result<Option<Self>> {
         let path = data_dir.join("metadata.json");

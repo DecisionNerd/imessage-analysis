@@ -28,6 +28,7 @@ rusqlite
   └── SQL JOIN (message + chat_message_join + handle)
         └── stream rows → per-row Rust transforms
               ├── blob_parser    — attributedBody BLOB → inferred_text
+              ├── body_text       — analysis-ready body text for search/NLP/retrieval
               ├── detect_reaction         — associated_message_type → reaction string
               ├── detect_message_effect   — expressive_send_style_id → effect name
               ├── extract_link_domain     — URL parsing via `url` crate

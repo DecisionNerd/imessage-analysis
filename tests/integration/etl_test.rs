@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+use arrow::array::Array;
 use imessage_core::etl::{sqlite_reader, transforms};
 use imessage_core::query::built_in;
 
@@ -61,6 +62,7 @@ fn transforms_schema_has_expected_columns() {
         "message_id",
         "is_from_me",
         "text_combined",
+        "body_text",
         "text",
         "inferred_text",
         "handle_id",
@@ -83,6 +85,48 @@ fn transforms_schema_has_expected_columns() {
     ] {
         assert!(names.contains(col), "missing column: {col}");
     }
+}
+
+#[test]
+fn body_text_is_the_analysis_ready_message_body() {
+    let raw = sqlite_reader::read_all(&fixture_db()).unwrap();
+    let contacts = HashMap::new();
+    let batch = transforms::transform(&raw.messages, &raw.chat_members, &contacts).unwrap();
+
+    let text_col = batch
+        .column_by_name("text")
+        .unwrap()
+        .as_any()
+        .downcast_ref::<arrow::array::StringArray>()
+        .unwrap();
+    let inferred_col = batch
+        .column_by_name("inferred_text")
+        .unwrap()
+        .as_any()
+        .downcast_ref::<arrow::array::StringArray>()
+        .unwrap();
+    let combined_col = batch
+        .column_by_name("text_combined")
+        .unwrap()
+        .as_any()
+        .downcast_ref::<arrow::array::StringArray>()
+        .unwrap();
+    let body_col = batch
+        .column_by_name("body_text")
+        .unwrap()
+        .as_any()
+        .downcast_ref::<arrow::array::StringArray>()
+        .unwrap();
+
+    assert_eq!(text_col.value(0), "Hey, how are you?");
+    assert_eq!(body_col.value(0), "Hey, how are you?");
+
+    assert!(text_col.is_null(2));
+    assert_eq!(inferred_col.value(2), "Call me later");
+    assert_eq!(combined_col.value(2), "Call me later");
+    assert_eq!(body_col.value(2), "Call me later");
+
+    assert!(body_col.is_null(7), "audio-only messages have no body text");
 }
 
 #[test]

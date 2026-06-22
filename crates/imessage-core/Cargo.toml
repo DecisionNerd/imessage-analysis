@@ -7,6 +7,7 @@ authors.workspace = true
 [dependencies]
 # SQLite
 rusqlite = { version = "0.32", features = ["bundled"] }
+crabstep = "0.5"
 
 # Arrow / Parquet
 arrow = { version = "58", features = ["chrono-tz"] }

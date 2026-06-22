@@ -37,7 +37,7 @@ Execute arbitrary SQL against the `messages` table.
 
 ```sh
 imessage-analysis query "SELECT year, COUNT(*) AS n FROM messages GROUP BY year ORDER BY year"
-imessage-analysis query "SELECT text_combined FROM messages WHERE name = 'Alice' LIMIT 20" --format json
+imessage-analysis query "SELECT body_text FROM messages WHERE name = 'Alice' LIMIT 20" --format json
 imessage-analysis query "SELECT * FROM messages WHERE reaction != 'no-reaction'" --limit 100
 ```
 

@@ -47,7 +47,7 @@ INSERT INTO message VALUES (1, 'Hey, how are you?', NULL, 1, 0, 7270128000000000
 INSERT INTO message VALUES (2, 'Doing great!', NULL, 0, 1, 727012860000000000, 0, NULL, NULL, NULL, 0);
 -- msg 3: received with NULL text → attributedBody fallback
 --   attributedBody encodes "Call me later" between NSString and NSDictionary markers
-INSERT INTO message VALUES (3, NULL, X'4e53537472696e6743616c6c206d65206c617465724e44696374696f6e617279', 1, 0, 727012920000000000, 0, NULL, NULL, NULL, 0);
+INSERT INTO message VALUES (3, NULL, X'4e53537472696e6743616c6c206d65206c617465724e5344696374696f6e617279', 1, 0, 727012920000000000, 0, NULL, NULL, NULL, 0);
 -- msg 4: reaction (Loved) on msg 1 — associated_message_type=2000
 INSERT INTO message VALUES (4, 'Loved "Hey, how are you?"', NULL, 1, 0, 727012980000000000, 2000, NULL, NULL, NULL, 0);
 -- msg 5: sent with Fireworks effect

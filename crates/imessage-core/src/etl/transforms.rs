@@ -18,6 +18,7 @@ pub fn schema() -> Schema {
         Field::new("text", DataType::Utf8, true),
         Field::new("inferred_text", DataType::Utf8, true),
         Field::new("text_combined", DataType::Utf8, true),
+        Field::new("body_text", DataType::Utf8, true),
         Field::new("handle_id", DataType::Int64, false),
         Field::new("contact_info", DataType::Utf8, true),
         Field::new("updated_contact_info", DataType::Utf8, true),
@@ -54,6 +55,7 @@ pub fn transform(
     let mut col_text = StringBuilder::with_capacity(len, len * 32);
     let mut inferred_text = StringBuilder::with_capacity(len, len * 32);
     let mut text_combined = StringBuilder::with_capacity(len, len * 32);
+    let mut body_text = StringBuilder::with_capacity(len, len * 32);
     let mut handle_id = Int64Builder::with_capacity(len);
     let mut contact_info = StringBuilder::with_capacity(len, len * 16);
     let mut updated_contact_info = StringBuilder::with_capacity(len, len * 16);
@@ -87,6 +89,7 @@ pub fn transform(
         append_opt_str(&mut col_text, native_text);
         append_opt_str(&mut inferred_text, inf.as_deref());
         append_opt_str(&mut text_combined, combined.as_deref());
+        append_opt_str(&mut body_text, combined.as_deref());
 
         // Contact info
         append_opt_str(&mut contact_info, row.contact_info.as_deref());
@@ -194,6 +197,7 @@ pub fn transform(
             Arc::new(col_text.finish()),
             Arc::new(inferred_text.finish()),
             Arc::new(text_combined.finish()),
+            Arc::new(body_text.finish()),
             Arc::new(handle_id.finish()),
             Arc::new(contact_info.finish()),
             Arc::new(updated_contact_info.finish()),
